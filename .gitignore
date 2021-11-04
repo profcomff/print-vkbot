@@ -11,3 +11,4 @@ data/mconfig.py
 core/config.py
 func/config.py
 temp.png
+auth.ini

@@ -4,7 +4,7 @@ import time
 import traceback
 import datetime
 
-import data.ru_dictionary as ru
+import ru_dictionary as ru
 import func.vkontakte_functions as vk
 import core.keybords as kb
 

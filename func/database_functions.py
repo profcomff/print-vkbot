@@ -12,13 +12,15 @@
 # default "0" for tz
 import psycopg2
 
-from data import config
+import configparser
+config = configparser.ConfigParser()
+config.read('auth.ini')
 
-connection = psycopg2.connect(dbname=config.db_name,
-                              user=config.db_account,
-                              password=config.db_password,
-                              host=config.db_host,
-                              port=config.db_port)
+connection = psycopg2.connect(dbname=config['auth_db']['name'],
+                              user=config['auth_db']['user'],
+                              password=config['auth_db']['password'],
+                              host=config['auth_db']['host'],
+                              port=config['auth_db']['port'])
 
 
 def reconnect():

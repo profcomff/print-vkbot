@@ -7,7 +7,7 @@ import time
 import traceback
 
 import func.vkontakte_functions as vk
-from data.ru_dictionary import kb_ans
+import ru_dictionary as ru
 
 
 # Pages of keyboard menu:
@@ -278,7 +278,7 @@ def keyboard_browser(user, str_payload):
             if payload[1] == 'cancel':
                 main_page(user.user_id)
             if payload[1] == 'help':
-                ans = kb_ans['help']
+                ans = ru.kb_ans['help']
                 main_page(user.user_id, ans)
 
         main_page(user.user_id)

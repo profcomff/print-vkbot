@@ -4,19 +4,20 @@
 # 2019
 import time
 import datetime
+import json
 import traceback
 import requests
-import json
+import configparser
 
 from vk_api import VkApi
-from vk_api.longpoll import VkLongPoll, VkEventType
-from vk_api.keyboard import VkKeyboard
+from vk_api.longpoll import VkLongPoll
 from vk_api.utils import get_random_id
 
-from data import config
-from data import ru_dictionary as dict
 
-vk = VkApi(token=config.access_token)  # Auth with community token
+config = configparser.ConfigParser()
+config.read('auth.ini')
+
+vk = VkApi(token=config['auth_vk']['access_token'])  # Auth with community token
 longpoll = VkLongPoll(vk)  # Create a longpull variable
 
 
