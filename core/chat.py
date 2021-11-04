@@ -3,22 +3,33 @@
 import logging
 import time
 import traceback
+import requests
 
 import core.answers as ru
 import func.vkontakte_functions as vk
 import core.keybords as kb
 
 
-def order_print():
+def get_attachments(user):
     pass
 
 
-def validate_proff():
-    pass
+def order_print(user):
+    vk.write_msg(user.user_id, "Try to order print")
+    r = requests.post('https://app.profcomff.com/print', data={'surname': 'value',
+                                                               'number': user.last_name,
+                                                               'filename': 'test'})
+    logging.info(r)
 
 
-def check_proff():
-    pass
+# TODO: Validate number and remember or help
+def validate_proff(user):
+    vk.write_msg(user.user_id, "Try to validate number and save it to base")
+
+
+# TODO: Check number in base and print
+def check_proff(user):
+    vk.write_msg(user.user_id, "Check number in base")
 
 
 def message_analyzer(user):
@@ -26,31 +37,13 @@ def message_analyzer(user):
         if len(user.message) <= 0 and len(user.attachments) == 0:
             kb.main_page(user.user_id, ru.kb_ans['help'])
         elif len(user.message) > 0 and len(user.attachments) == 0:
-            # TODO: Validate number and remember or help
-            vk.write_msg(user.user_id, "Validate number and remember or help")
+            validate_proff(user)
         elif len(user.message) <= 0 and len(user.attachments) > 0:
-            # TODO: Check number in base and print
-            vk.write_msg(user.user_id, "Check number in base and print")
+            check_proff(user)
+            order_print(user)
         elif len(user.message) > 0 and len(user.attachments) > 0:
-            # TODO:Validate number and remember and print
-            vk.write_msg(user.user_id, "TODO:Validate number and remember and print")
-
-
-        # valid = user.message.isnumeric()
-        # if not valid:
-        #     kb.main_page(user.user_id, ru.kb_ans['help'])
-        #     return
-        # else:
-        #     vk.write_msg(user.user_id, ans, attach)
-        #
-        # attach = None
-        # open_kb = True
-        #
-        # ans = "Главное меню"
-        # if open_kb:
-        #     kb.main_page(user.user_id, ans)
-        # else:
-        #     vk.write_msg(user.user_id, ans, attach)
+            validate_proff(user)
+            order_print(user)
 
     except OSError as err:
         raise err
