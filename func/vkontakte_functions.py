@@ -70,7 +70,7 @@ def write_notify_msg(user_id, message):
 
 
 def send_keyboard(user_id, kb, message, attach=None):
-    if attach == None:
+    if attach is None:
         vk.method('messages.send',
                   {'user_id': user_id, 'keyboard': kb, 'message': message, 'random_id': get_random_id()})
     else:

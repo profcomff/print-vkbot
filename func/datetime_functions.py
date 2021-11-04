@@ -163,7 +163,7 @@ def neareat_date(day_and_month):
     while stopper < 20:
         str_year = str(date_now_obj().year + y)
         date = day_and_month + '.' + str_year
-        if (validate_date(date) == True):
+        if validate_date(date) == True:
             difference = (str_to_date(date) - date_now_obj()).days
             if difference >= 0:
                 return 'date ' + date
