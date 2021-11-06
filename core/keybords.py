@@ -37,7 +37,7 @@ def keyboard_browser(user, str_payload):
     except OSError as err:
         raise err
     except BaseException as err:
-        ans = dict.errors['kb_error']
+        ans = ru.errors['kb_error']
         vk.write_msg(user.user_id, ans)
         logging.error("Unknown Exception (keyboard_browser), description:")
         traceback.print_tb(err.__traceback__)

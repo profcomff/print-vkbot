@@ -11,6 +11,17 @@ kb_ans = {
             'подписей, затем прикрепите pdf файл размером не больше 3МБ. '
 }
 
+help_ans = {
+    'помогите': kb_ans['help'],
+    'помощь': kb_ans['help'],
+    'help': kb_ans['help'],
+    'как ': kb_ans['help'],
+    'инструкция': kb_ans['help'],
+    'начать': kb_ans['help'],
+    'старт': kb_ans['help'],
+    'start': kb_ans['help']
+}
+
 errors = {
     'not_available': 'К сожалению, действие временно недоступно',
     'im_broken': 'Глубоко внутри меня что-то сломалось...',

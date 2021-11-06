@@ -12,6 +12,8 @@ import func.database_functions as db
 import core.keybords as kb
 
 PDF_PATH = "pdf"
+GET_MEMBER_URL = "https://app.profcomff.com/print/is_union_member"
+PRINT_URL = "https://app.profcomff.com/print"
 
 
 def get_attachments(user):
@@ -54,9 +56,7 @@ def validate_proff(user):
         surname = user.message.split("\n")[0].strip()
         number = user.message.split("\n")[1].strip()
 
-        r = requests.get("https://app.profcomff.com/print/is_union_member", params={'surname': surname,
-                                                                                    'number': number,
-                                                                                    'v': 1})
+        r = requests.get(GET_MEMBER_URL, params=dict(surname=surname, v=1, number=number))
         data = db.get_user(user.user_id)
         if r.json() and data is None:
             db.add_user(user.user_id, surname, number)
@@ -88,9 +88,7 @@ def validate_proff(user):
 def check_proff(user):
     if db.get_user(user.user_id) is not None:
         _, surname, number = db.get_user(user.user_id)
-        r = requests.get("https://app.profcomff.com/print/is_union_member", params={'surname': surname,
-                                                                                    'number': number,
-                                                                                    'v': 1})
+        r = requests.get(GET_MEMBER_URL, params=dict(surname=surname, number=number, v=1))
         if r.json():
             return True
         else:
@@ -103,10 +101,14 @@ def check_proff(user):
         vk.write_msg(user.user_id, "Иванов\n1234567")
 
 
-
-
 def message_analyzer(user):
     try:
+        if len(user.message) > 0:
+            for word in ru.help_ans.keys():
+                if word in user.message.lower():
+                    vk.write_msg(user.user_id, ru.help_ans[word])
+                    return
+
         if len(user.message) <= 0 and len(user.attachments) == 0:
             kb.main_page(user.user_id, ru.kb_ans['help'])
         elif len(user.message) > 0 and len(user.attachments) == 0:
@@ -138,12 +140,6 @@ def process_event(event):
             kb.keyboard_browser(user, event.payload)
         else:
             message_analyzer(user)
-
-    if event.type == vk.VkBotEventType.MESSAGE_EVENT:
-        vk_user = vk.user_get(event.message['from_id'])
-        user = vk.User(event.message['from_id'], event.message['text'],
-                       event.message.attachments, (vk_user[0])['first_name'], (vk_user[0])['last_name'])
-        vk.write_msg(user.user_id, "Calback обработан")
 
 
 def chat_loop():
