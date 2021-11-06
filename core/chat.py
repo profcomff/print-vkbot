@@ -49,26 +49,60 @@ def order_print(user, requisites=None):
         # logging.info(r)
 
 
-# TODO: Validate number and remember or help
 def validate_proff(user):
-    vk.write_msg(user.user_id, "Проверка профномера и сохранение в базу.")
-    # db.add_user(user.user_id, "Викторов", int("024240242"))
-    surname = "Маракулин"
-    number = "1018173"
-    r = requests.get("https://app.profcomff.com/print/is_union_member", params={'surname': surname,
-                                                                                'number': number,
-                                                                                'v': 1})
-    js = r.json()
-    if r.json():
-        vk.write_msg(user.user_id, "Номер существует")
+    if len(user.message.split("\n")) == 2:
+        surname = user.message.split("\n")[0].strip()
+        number = user.message.split("\n")[1].strip()
+
+        r = requests.get("https://app.profcomff.com/print/is_union_member", params={'surname': surname,
+                                                                                    'number': number,
+                                                                                    'v': 1})
+        data = db.get_user(user.user_id)
+        if r.json() and data is None:
+            db.add_user(user.user_id, surname, number)
+            vk.write_msg(user.user_id, "Поздравляю! Проверка пройдена и данные сохранёны для этого аккаунта вк. "
+                                       "Можете присылать pdf.")
+            return True
+        elif r.json() and data is not None:
+            db.update_user(user.user_id, surname, number)
+            vk.write_msg(user.user_id, "Поздравляю! Проверка пройдена и данные обновлены.")
+            return True
+        elif r.json() is False and data is None:
+            vk.write_msg(user.user_id, "Проверка не пройдена. Удостоверьтесь что вы состоите в профкоме и правильно "
+                                       "ввели данные.\n\nВведите фамилию и номер профсоюзного билета в формате:")
+            vk.write_msg(user.user_id, "Иванов\n1234567")
+        elif r.json() is False and data is not None:
+            vk.write_msg(user.user_id, "Проверка не пройдена. Удостоверьтесь что вы состоите в профкоме и правильно "
+                                       "ввели данные.\n\nВведите фамилию и номер профсоюзного билета в формате:")
+            vk.write_msg(user.user_id, "Иванов\n1234567")
     else:
-        vk.write_msg(user.user_id, "Номера не существует")
+        if db.get_user(user.user_id) is None:
+            vk.write_msg(user.user_id, "Введите фамилию и номер профсоюзного билета в формате:")
+            vk.write_msg(user.user_id, "Иванов\n1234567")
+        else:
+            vk.write_msg(user.user_id, "Для того чтобы обновить данные авторизации "
+                                       "введите фамилию и номер профсоюзного билета в формате:")
+            vk.write_msg(user.user_id, "Иванов\n1234567")
 
 
-
-# TODO: Check number in base and print
 def check_proff(user):
-    vk.write_msg(user.user_id, "Проверка номера в базе.")
+    if db.get_user(user.user_id) is not None:
+        _, surname, number = db.get_user(user.user_id)
+        r = requests.get("https://app.profcomff.com/print/is_union_member", params={'surname': surname,
+                                                                                    'number': number,
+                                                                                    'v': 1})
+        if r.json():
+            return True
+        else:
+            vk.write_msg(user.user_id, "Для использования принтера необходимо авторизоваться.\n"
+                                       "Введите фамилию и номер профсоюзного билета в формате:")
+            vk.write_msg(user.user_id, "Иванов\n1234567")
+    else:
+        vk.write_msg(user.user_id, "Для использования принтера необходимо авторизоваться.\n"
+                                   "Введите фамилию и номер профсоюзного билета в формате:")
+        vk.write_msg(user.user_id, "Иванов\n1234567")
+
+
 
 
 def message_analyzer(user):
@@ -78,11 +112,11 @@ def message_analyzer(user):
         elif len(user.message) > 0 and len(user.attachments) == 0:
             validate_proff(user)
         elif len(user.message) <= 0 and len(user.attachments) > 0:
-            check_proff(user)
-            order_print(user)
+            if check_proff(user):
+                order_print(user)
         elif len(user.message) > 0 and len(user.attachments) > 0:
-            validate_proff(user)
-            order_print(user)
+            if validate_proff(user):
+                order_print(user)
 
     except OSError as err:
         raise err
