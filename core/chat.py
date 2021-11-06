@@ -8,6 +8,7 @@ import requests
 
 import core.answers as ru
 import func.vkontakte_functions as vk
+import func.database_functions as db
 import core.keybords as kb
 
 PDF_PATH = "pdf"
@@ -16,15 +17,13 @@ PDF_PATH = "pdf"
 def get_attachments(user):
     if len(user.attachments) > 1:
         vk.write_msg(user.user_id, "Файлов слишком много. Прикрепите только один файл pdf.")
-        return False
     if user.attachments[0]['type'] != 'doc':
         vk.write_msg(user.user_id, "Я умею печатать только документы в формате pdf.")
-        return False
-    else:
+    if user.attachments[0]['type'] == 'doc':
         ext = user.attachments[0]['doc']['ext']
         if ext != 'pdf':
             vk.write_msg(user.user_id, "Я умею печатать только документы в формате pdf.")
-            return False
+            return
         title = user.attachments[0]['doc']['title']
         url = user.attachments[0]['doc']['url']
 
@@ -37,22 +36,34 @@ def get_attachments(user):
         with open(os.path.join(PDF_PATH, str(user.user_id), title), 'wb') as f:
             f.write(r.content)
         vk.write_msg(user.user_id, "Вложения получены успешно")
-        return True
+        return os.path.join(PDF_PATH, str(user.user_id), title)
 
 
 def order_print(user, requisites=None):
-    if get_attachments(user):
+    pdf_path = get_attachments(user)
+    if pdf_path is not None:
         vk.write_msg(user.user_id, "Попытка заказать печать")
-
-    # r = requests.post('https://app.profcomff.com/print', data={'surname': 'value',
-    #                                                            'number': user.last_name,
-    #                                                            'filename': 'test'})
-    # logging.info(r)
+        # r = requests.post('https://app.profcomff.com/print', data={'surname': 'value',
+        #                                                            'number': user.last_name,
+        #                                                            'filename': 'test'})
+        # logging.info(r)
 
 
 # TODO: Validate number and remember or help
 def validate_proff(user):
     vk.write_msg(user.user_id, "Проверка профномера и сохранение в базу.")
+    # db.add_user(user.user_id, "Викторов", int("024240242"))
+    surname = "Маракулин"
+    number = "1018173"
+    r = requests.get("https://app.profcomff.com/print/is_union_member", params={'surname': surname,
+                                                                                'number': number,
+                                                                                'v': 1})
+    js = r.json()
+    if r.json():
+        vk.write_msg(user.user_id, "Номер существует")
+    else:
+        vk.write_msg(user.user_id, "Номера не существует")
+
 
 
 # TODO: Check number in base and print

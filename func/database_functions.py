@@ -1,15 +1,6 @@
-﻿# sessiyabot/func/database_functions
-# - PostgreSQL functions for work with database
-# Marakulin Andrey @annndruha
-# 2019
+﻿# Marakulin Andrey @annndruha
+# 2021
 
-# PostgreSQL database settings:
-# database must be have a schema "sessiyabot" and a table "users"
-# "users" columns include id, examdate, notifytime, subcribe, tz, firstname,
-# lastname
-# "NotNone" flag for id, subcribe, tz
-# default "false" for subcribe
-# default "0" for tz
 import psycopg2
 
 import configparser
@@ -25,18 +16,27 @@ connection = psycopg2.connect(dbname=config['auth_db']['name'],
 
 def reconnect():
     global connection
-    connection = psycopg2.connect(dbname=config.db_name,
-                                  user=config.db_account,
-                                  password=config.db_password,
-                                  host=config.db_host,
-                                  port=config.db_port)
+    connection = psycopg2.connect(dbname=config['auth_db']['name'],
+                                  user=config['auth_db']['user'],
+                                  password=config['auth_db']['password'],
+                                  host=config['auth_db']['host'],
+                                  port=config['auth_db']['port'])
 
 
 # Getters
 def get_user(user_id):
     with connection.cursor() as cur:
-        cur.execute("SELECT * FROM sessiyabot.users WHERE id=%s;", (user_id,))
+        cur.execute("SELECT * FROM printer_bot.vk_users WHERE vk_id=%s;", (user_id,))
         return cur.fetchone()
+
+
+def add_user(user_id, last_name, proff_number):
+    with connection.cursor() as cur:
+        cur.execute(
+            "INSERT INTO printer_bot.vk_users (vk_id,last_name,proff_number) VALUES (%s,%s,%s);",
+            (user_id, last_name, proff_number))
+        connection.commit()
+
 
 
 def get_users_who_sub_at(time):
