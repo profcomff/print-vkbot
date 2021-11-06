@@ -12,7 +12,7 @@ import configparser
 from vk_api import VkApi
 from vk_api.utils import get_random_id
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
-from vk_api.keyboard import VkKeyboard, VkKeyboardColor
+from vk_api.keyboard import VkKeyboard
 
 config = configparser.ConfigParser()
 config.read('auth.ini')
@@ -70,23 +70,23 @@ def send_keyboard(user_id, kb, message, attach=None):
                                     'random_id': get_random_id()})
 
 
-def get_attach_str(user_id):
-    getMessagesUploadServer = vk.method('photos.getMessagesUploadServer', {'peer_id': user_id})
-    upload_url = getMessagesUploadServer['upload_url']
-
-    file = {'photo': open('data/temp.png', 'rb')}
-
-    ur = requests.post(upload_url, files=file).json()
-
-    photo = vk.method('photos.saveMessagesPhoto', {'photo': ur['photo'], 'server': ur['server'], 'hash': ur['hash']})
-
-    type = 'photo'
-    media_id = str(photo[0]['id'])
-    owner_id = str(photo[0]['owner_id'])
-    access_key = photo[0]['access_key']
-    at = type + owner_id + '_' + media_id + '_' + access_key
-    return at
-
-
-def get_doc_info(docid):
-    return vk.method('docs.getById', {'docs': docid + ',' + docid})
+# def get_attach_str(user_id):
+#     getMessagesUploadServer = vk.method('photos.getMessagesUploadServer', {'peer_id': user_id})
+#     upload_url = getMessagesUploadServer['upload_url']
+#
+#     file = {'photo': open('data/temp.png', 'rb')}
+#
+#     ur = requests.post(upload_url, files=file).json()
+#
+#     photo = vk.method('photos.saveMessagesPhoto', {'photo': ur['photo'], 'server': ur['server'], 'hash': ur['hash']})
+#
+#     type = 'photo'
+#     media_id = str(photo[0]['id'])
+#     owner_id = str(photo[0]['owner_id'])
+#     access_key = photo[0]['access_key']
+#     at = type + owner_id + '_' + media_id + '_' + access_key
+#     return at
+#
+#
+# def get_doc_info(docid):
+#     return vk.method('docs.getById', {'docs': docid + ',' + docid})

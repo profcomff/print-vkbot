@@ -5,15 +5,20 @@ import logging
 import time
 import traceback
 import requests
+import configparser
 
 import core.answers as ru
 import func.vkontakte_functions as vk
 import func.database_functions as db
 import core.keybords as kb
 
-PDF_PATH = "pdf"
-GET_MEMBER_URL = "https://app.profcomff.com/print/is_union_member"
-PRINT_URL = "https://app.profcomff.com/print"
+
+config = configparser.ConfigParser()
+config.read('auth.ini')
+
+PDF_PATH = config["settings"]["pdf_path"]
+PRINT_URL = config["print_server"]["print_url"]
+GET_MEMBER_URL = config["print_server"]["get_member_url"]
 
 
 def get_attachments(user):
@@ -45,6 +50,7 @@ def order_print(user, requisites=None):
     pdf_path = get_attachments(user)
     if pdf_path is not None:
         vk.write_msg(user.user_id, "Попытка заказать печать")
+        # TODO: dgh
         # r = requests.post('https://app.profcomff.com/print', data={'surname': 'value',
         #                                                            'number': user.last_name,
         #                                                            'filename': 'test'})
@@ -60,12 +66,12 @@ def validate_proff(user):
         data = db.get_user(user.user_id)
         if r.json() and data is None:
             db.add_user(user.user_id, surname, number)
-            vk.write_msg(user.user_id, "Поздравляю! Проверка пройдена и данные сохранёны для этого аккаунта вк. "
-                                       "Можете присылать pdf.")
+            kb.auth_button(user.user_id, "Поздравляю! Проверка пройдена и данные сохранёны для этого аккаунта вк. "
+                                         "Можете присылать pdf.")
             return True
         elif r.json() and data is not None:
             db.update_user(user.user_id, surname, number)
-            vk.write_msg(user.user_id, "Поздравляю! Проверка пройдена и данные обновлены.")
+            kb.auth_button(user.user_id, "Поздравляю! Проверка пройдена и данные обновлены.")
             return True
         elif r.json() is False and data is None:
             vk.write_msg(user.user_id, "Проверка не пройдена. Удостоверьтесь что вы состоите в профкоме и правильно "
@@ -106,11 +112,11 @@ def message_analyzer(user):
         if len(user.message) > 0:
             for word in ru.help_ans.keys():
                 if word in user.message.lower():
-                    vk.write_msg(user.user_id, ru.help_ans[word])
+                    kb.auth_button(user.user_id, ru.help_ans[word])
                     return
 
         if len(user.message) <= 0 and len(user.attachments) == 0:
-            kb.main_page(user.user_id, ru.kb_ans['help'])
+            kb.auth_button(user.user_id, ru.kb_ans['help'])
         elif len(user.message) > 0 and len(user.attachments) == 0:
             validate_proff(user)
         elif len(user.message) <= 0 and len(user.attachments) > 0:
@@ -136,8 +142,8 @@ def process_event(event):
         user = vk.User(event.message['from_id'], event.message['text'],
                        event.message.attachments, (vk_user[0])['first_name'], (vk_user[0])['last_name'])
 
-        if hasattr(event, 'payload'):
-            kb.keyboard_browser(user, event.payload)
+        if event.message.payload is not None:
+            kb.keyboard_browser(user, event.message.payload)
         else:
             message_analyzer(user)
 
