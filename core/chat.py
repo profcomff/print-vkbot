@@ -11,25 +11,38 @@ import core.keybords as kb
 
 
 def get_attachments(user):
-    pass
+    if len(user.attachments) > 2:
+        vk.write_msg(user.user_id, "Файлов слишком много. Прикрепите только один файл pdf.")
+        return False
+    if user.attachments['attach1_type'] != 'doc':
+        vk.write_msg(user.user_id, "Я умею печатать только документы в формате pdf.")
+        return False
+    else:
+        # attach_info = vk.get_doc_info(user.attachments['attach1'])
+        vk.write_msg(user.user_id, "Вложения получены успешно")
+
+        return True
 
 
-def order_print(user):
-    vk.write_msg(user.user_id, "Try to order print")
-    r = requests.post('https://app.profcomff.com/print', data={'surname': 'value',
-                                                               'number': user.last_name,
-                                                               'filename': 'test'})
-    logging.info(r)
+
+def order_print(user, requisites=None):
+    if get_attachments(user):
+        vk.write_msg(user.user_id, "Попытка заказать печать")
+
+    # r = requests.post('https://app.profcomff.com/print', data={'surname': 'value',
+    #                                                            'number': user.last_name,
+    #                                                            'filename': 'test'})
+    # logging.info(r)
 
 
 # TODO: Validate number and remember or help
 def validate_proff(user):
-    vk.write_msg(user.user_id, "Try to validate number and save it to base")
+    vk.write_msg(user.user_id, "Проверка профномера и сохранение в базу.")
 
 
 # TODO: Check number in base and print
 def check_proff(user):
-    vk.write_msg(user.user_id, "Check number in base")
+    vk.write_msg(user.user_id, "Проверка номера в базе.")
 
 
 def message_analyzer(user):
@@ -55,20 +68,30 @@ def message_analyzer(user):
         logging.error(str(err.args))
 
 
+def process_event(event):
+    if event.type == vk.VkBotEventType.MESSAGE_NEW:
+        vk_user = vk.user_get(event.user_id)
+        user = vk.User(event.user_id, event.text,
+                       event.attachments, (vk_user[0])['first_name'], (vk_user[0])['last_name'])
+
+        if hasattr(event, 'payload'):
+            kb.keyboard_browser(user, event.payload)
+        else:
+            message_analyzer(user)
+
+    if event.type == vk.VkBotEventType.MESSAGE_EVENT:
+        vk_user = vk.user_get(event.user_id)
+        user = vk.User(event.user_id, event.text,
+                       event.attachments, (vk_user[0])['first_name'], (vk_user[0])['last_name'])
+        vk.write_msg(user.user_id, "Calback обработан")
+
+
 def chat_loop():
     while True:
         try:
             vk.reconnect()
             for event in vk.longpoll.listen():
-                if vk.ismessage_new_to_me(event):
-                    vk_user = vk.user_get(event.user_id)
-                    user = vk.User(event.user_id, event.text,
-                                   event.attachments, (vk_user[0])['first_name'], (vk_user[0])['last_name'])
-
-                    try:
-                        kb.keyboard_browser(user, event.payload)
-                    except AttributeError:
-                        message_analyzer(user)
+                process_event(event)
 
         except OSError as err:
             logging.error("OSError (longpull_loop), description:")

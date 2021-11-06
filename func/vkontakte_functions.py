@@ -10,16 +10,19 @@ import requests
 import configparser
 
 from vk_api import VkApi
-from vk_api.keyboard import VkKeyboard
-from vk_api.longpoll import VkLongPoll, VkEventType
 from vk_api.utils import get_random_id
-
+from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
+from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 
 config = configparser.ConfigParser()
 config.read('auth.ini')
 
-vk = VkApi(token=config['auth_vk']['access_token'])  # Auth with community token
-longpoll = VkLongPoll(vk)  # Create a longpull variable
+GROUP_ID = config['auth_vk']['group_id']
+GROUP_TOKEN = config['auth_vk']['group_token']
+API_VERSION = "5.120"
+
+vk = VkApi(token=GROUP_TOKEN, api_version=API_VERSION)  # Auth with community token
+longpoll = VkBotLongPoll(vk, group_id=GROUP_ID)  # Create a longpull variable
 
 
 class User:
@@ -31,21 +34,11 @@ class User:
         self.attachments = attachments
 
 
-# Use in notify message to protect user from two notify messages in the same
-# minute
-def datetime_to_random_id():
-    delta = datetime.timedelta(hours=3)  # MoscowUTC
-    tzone = datetime.timezone(delta)
-    now = datetime.datetime.now(tzone)
-    i = datetime.datetime.strftime(now, '%y%m%d%H%M')
-    return int(i)
-
-
 def reconnect():
     global vk
     global longpoll
-    vk = VkApi(token=config['auth_vk']['access_token'])
-    longpoll = VkLongPoll(vk)
+    vk = VkApi(token=GROUP_TOKEN, api_version=API_VERSION)
+    longpoll = VkBotLongPoll(vk, group_id=GROUP_ID)
 
 
 def user_get(user_id):
@@ -66,8 +59,6 @@ def write_msg(user_id, message=None, attach=None, parse_links=False):
         params['dont_parse_links'] = 1
 
     vk.method('messages.send', params)
-
-
 
 
 def send_keyboard(user_id, kb, message, attach=None):
@@ -97,5 +88,5 @@ def get_attach_str(user_id):
     return at
 
 
-def ismessage_new_to_me(event):
-    return event.type == VkEventType.MESSAGE_NEW and event.to_me
+def get_doc_info(docid):
+    return vk.method('docs.getById', {'docs': docid + ',' + docid})

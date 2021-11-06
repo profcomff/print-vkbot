@@ -11,7 +11,7 @@ import core.answers as ru
 def main_page(user_id, ans="Главное меню", attach=None):
     kb = vk.VkKeyboard(one_time=False)
 
-    kb.add_button("Начать", color='positive')  # , payload=["next_page", "notify_page"]
+    kb.add_button("Начать", color='positive', payload=["command", "start"])
     kb.add_line()
     kb.add_button("Инструкция", color='primary', payload=["command", "help"])
     vk.send_keyboard(user_id, kb.get_keyboard(), ans, attach=attach)
@@ -22,12 +22,15 @@ def keyboard_browser(user, str_payload):
         payload = json.loads(str_payload)
         if not isinstance(payload, list):
             main_page(user.user_id)
-        elif payload[0] == 'command':
+        if payload[0] == 'command':
             if payload[1] == 'cancel':
                 main_page(user.user_id)
             if payload[1] == 'help':
                 ans = ru.kb_ans['help']
                 main_page(user.user_id, ans)
+            if payload[1] == 'start':
+                vk.write_msg(user.user_id, 'Calback')
+                main_page(user.user_id)
 
         main_page(user.user_id)
 
