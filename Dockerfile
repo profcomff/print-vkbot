@@ -1,15 +1,12 @@
-# sessiyabot/Dockerfile
-# -docker container settings
-# Config file needs to add MANUALLY
 # Marakulin Andrey @annndruha
-# 2019
+# 2021
 
 # Base image
 FROM python:3.7.6-stretch
 
 # Create directoris inside container
-ADD ./ /sessiyabot
-WORKDIR /sessiyabot
+ADD ./ /print-bot
+WORKDIR /print-bot
 
 # Install libs from requirements
 RUN pip install --no-cache-dir -r requirements.txt
@@ -18,10 +15,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 EXPOSE 42
 
 # Run the file
-CMD ["python", "-u", "./sessiyabot.py"]
+CMD ["python", "-u", "./print-bot.py"]
 
-# Example docker Ubuntu command:
-# docker run -d --name sessiyabot -v /root/sessiyabot/configvolume.py:/sessiyabot/data/config.py imagename
-
-# See logs:
-# docker logs sessiyabot --follow
+##===== Example docker Ubuntu command:
+# docker run -d --name print-bot -v /root/print-bot:/print-bot imagename
+##==== Next, add auth.ini file to /root/print-bot
+##==== and restart container
+# docker stop print-bot
+# docker start print-bot
