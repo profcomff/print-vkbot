@@ -1,5 +1,6 @@
 ﻿# Marakulin Andrey @annndruha
 # 2021
+import os
 import logging
 import time
 import traceback
@@ -9,20 +10,34 @@ import core.answers as ru
 import func.vkontakte_functions as vk
 import core.keybords as kb
 
+PDF_PATH = "pdf"
+
 
 def get_attachments(user):
-    if len(user.attachments) > 2:
+    if len(user.attachments) > 1:
         vk.write_msg(user.user_id, "Файлов слишком много. Прикрепите только один файл pdf.")
         return False
-    if user.attachments['attach1_type'] != 'doc':
+    if user.attachments[0]['type'] != 'doc':
         vk.write_msg(user.user_id, "Я умею печатать только документы в формате pdf.")
         return False
     else:
-        # attach_info = vk.get_doc_info(user.attachments['attach1'])
+        ext = user.attachments[0]['doc']['ext']
+        if ext != 'pdf':
+            vk.write_msg(user.user_id, "Я умею печатать только документы в формате pdf.")
+            return False
+        title = user.attachments[0]['doc']['title']
+        url = user.attachments[0]['doc']['url']
+
+        if not os.path.exists(PDF_PATH):
+            os.makedirs(PDF_PATH)
+        if not os.path.exists(os.path.join(PDF_PATH, str(user.user_id))):
+            os.makedirs(os.path.join(PDF_PATH, str(user.user_id)))
+
+        r = requests.get(url, allow_redirects=True)
+        with open(os.path.join(PDF_PATH, str(user.user_id), title), 'wb') as f:
+            f.write(r.content)
         vk.write_msg(user.user_id, "Вложения получены успешно")
-
         return True
-
 
 
 def order_print(user, requisites=None):
@@ -70,9 +85,9 @@ def message_analyzer(user):
 
 def process_event(event):
     if event.type == vk.VkBotEventType.MESSAGE_NEW:
-        vk_user = vk.user_get(event.user_id)
-        user = vk.User(event.user_id, event.text,
-                       event.attachments, (vk_user[0])['first_name'], (vk_user[0])['last_name'])
+        vk_user = vk.user_get(event.message['from_id'])
+        user = vk.User(event.message['from_id'], event.message['text'],
+                       event.message.attachments, (vk_user[0])['first_name'], (vk_user[0])['last_name'])
 
         if hasattr(event, 'payload'):
             kb.keyboard_browser(user, event.payload)
@@ -80,9 +95,9 @@ def process_event(event):
             message_analyzer(user)
 
     if event.type == vk.VkBotEventType.MESSAGE_EVENT:
-        vk_user = vk.user_get(event.user_id)
-        user = vk.User(event.user_id, event.text,
-                       event.attachments, (vk_user[0])['first_name'], (vk_user[0])['last_name'])
+        vk_user = vk.user_get(event.message['from_id'])
+        user = vk.User(event.message['from_id'], event.message['text'],
+                       event.message.attachments, (vk_user[0])['first_name'], (vk_user[0])['last_name'])
         vk.write_msg(user.user_id, "Calback обработан")
 
 
