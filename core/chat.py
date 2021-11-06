@@ -24,8 +24,10 @@ GET_MEMBER_URL = config["print_server"]["get_member_url"]
 def get_attachments(user):
     if len(user.attachments) > 1:
         vk.write_msg(user.user_id, "Файлов слишком много. Прикрепите только один файл pdf.")
+        return
     if user.attachments[0]['type'] != 'doc':
         vk.write_msg(user.user_id, "Я умею печатать только документы в формате pdf.")
+        return
     if user.attachments[0]['type'] == 'doc':
         ext = user.attachments[0]['doc']['ext']
         if ext != 'pdf':
@@ -42,7 +44,7 @@ def get_attachments(user):
         r = requests.get(url, allow_redirects=True)
         with open(os.path.join(PDF_PATH, str(user.user_id), title), 'wb') as f:
             f.write(r.content)
-        vk.write_msg(user.user_id, "Вложения получены успешно")
+        vk.write_msg(user.user_id, f"{title}\nПодготовка к печати...")
         return os.path.join(PDF_PATH, str(user.user_id), title)
 
 
@@ -123,7 +125,7 @@ def message_analyzer(user):
             if check_proff(user):
                 order_print(user)
         elif len(user.message) > 0 and len(user.attachments) > 0:
-            if validate_proff(user):
+            if check_proff(user):
                 order_print(user)
 
     except OSError as err:

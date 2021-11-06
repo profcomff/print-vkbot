@@ -55,11 +55,19 @@ def keyboard_browser(user, str_payload):
             main_page(user.user_id)
         if payload[0] == 'command':
             if payload[1] == 'auth_true':
-                vk.write_msg(user.user_id, "Вы уже успешно авторизованы. Можете присылать файл на печать.")
+                if check_auth(user.user_id):
+                    vk.write_msg(user.user_id, "Вы уже успешно авторизованы. Можете присылать файл на печать.")
+                else:
+                    vk.write_msg(user.user_id, "Для использования принтера необходимо авторизоваться.\n"
+                                               "Введите фамилию и номер профсоюзного билета в формате:")
+                    vk.write_msg(user.user_id, "Иванов\n1234567")
             if payload[1] == 'auth_false':
-                vk.write_msg(user.user_id, "Для использования принтера необходимо авторизоваться.\n"
-                                           "Введите фамилию и номер профсоюзного билета в формате:")
-                vk.write_msg(user.user_id, "Иванов\n1234567")
+                if check_auth(user.user_id):
+                    vk.write_msg(user.user_id, "Вы уже успешно авторизованы. Можете присылать файл на печать.")
+                else:
+                    vk.write_msg(user.user_id, "Для использования принтера необходимо авторизоваться.\n"
+                                               "Введите фамилию и номер профсоюзного билета в формате:")
+                    vk.write_msg(user.user_id, "Иванов\n1234567")
             if payload[1] == 'help':
                 auth_button(user.user_id, ru.kb_ans['help'])
 
