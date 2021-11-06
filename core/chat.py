@@ -49,12 +49,23 @@ def get_attachments(user):
 
 
 def order_print(user, requisites):
-    pdf_path, title = get_attachments(user)
+    attstatus = get_attachments(user)
     vk_id, surname, number = requisites
-    if pdf_path is not None:
-        vk.write_msg(user.user_id, "Попытка заказать печать")
-        r = requests.post(PRINT_URL + '/file', data={'surname': surname, 'number': number, 'filename': title})
-        logging.info('fff')
+    if attstatus is not None:
+        pdf_path, title = attstatus
+        r = requests.post(PRINT_URL + '/file', json={'surname': surname, 'number': number, 'filename': title})
+        if r.status_code == 200:
+            pin = r.json()['pin']
+            logging.info(pin)
+
+            files = {'file': (title, open(pdf_path, 'rb'), 'application/pdf', {'Expires': '0'})}
+            rfile = requests.post(PRINT_URL + '/file/' + pin, files=files)
+            if rfile.status_code == 200:
+                vk.write_msg(user.user_id, "✔ Файл успешно отправлен на печать.")
+            else:
+                vk.write_msg(user.user_id, "Ошибка сервера печати. Попробуйте позже.")
+        else:
+            vk.write_msg(user.user_id, "Ошибка сервера печати. Попробуйте позже.")
 
 
 def validate_proff(user):
