@@ -17,11 +17,11 @@ config.read('auth.ini')
 PRINT_URL = config["print_server"]["print_url"]
 
 
-def main_page(user_id, ans="Привет!", attach=None):
+def main_page(user, ans="Привет!", attach=None):
     kb = vk.VkKeyboard(one_time=False)
 
     kb.add_button("Инструкция", color='primary', payload=["command", "help"])
-    vk.send_keyboard(user_id, kb.get_keyboard(), ans, attach=attach)
+    vk.send_keyboard(user, kb.get_keyboard(), ans, attach=attach)
 
 
 def check_auth(user_id):
@@ -36,23 +36,23 @@ def check_auth(user_id):
         return False
 
 
-def auth_button(user_id, ans=ru.kb_ans['help']):
+def auth_button(user, ans=ru.kb_ans['help']):
     kb = vk.VkKeyboard(inline=True)
-    if check_auth(user_id):
+    if check_auth(user.user_id):
         kb.add_button("Авторизовано", color='positive', payload=["command", "auth_true"])
     else:
         kb.add_button("Не авторизовано", color='negative', payload=["command", "auth_false"])
         if ru.kb_ans['help'] == ans:
             ans += '\n\nНо для начала нужно авторизоваться. Нажмите на кнопку ниже:'
 
-    vk.send_keyboard(user_id, kb.get_keyboard(), ans)
+    vk.send_keyboard(user, kb.get_keyboard(), ans)
 
 
 def keyboard_browser(user, str_payload):
     try:
         payload = json.loads(str_payload)
         if not isinstance(payload, list):
-            main_page(user.user_id, "Привет!")
+            main_page(user, "Привет!")
         if payload[0] == 'command':
             if payload[1] == 'auth_true':
                 if check_auth(user.user_id):
@@ -69,10 +69,10 @@ def keyboard_browser(user, str_payload):
                                                "Введите фамилию и номер профсоюзного билета в формате:")
                     vk.write_msg(user, "Иванов\n1234567")
             if payload[1] == 'help':
-                auth_button(user.user_id)
+                auth_button(user)
             if payload[1] == 'start':
-                main_page(user.user_id, "Привет!")
-                auth_button(user.user_id)
+                main_page(user, "Привет!")
+                auth_button(user)
 
     except OSError as err:
         raise err

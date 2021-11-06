@@ -48,21 +48,26 @@ def write_msg(user, message=None, attach=None, parse_links=False):
     if message is not None and attach is not None:
         params['message'] = message
         params['attachment'] = attach
+        logging.info(f"Message to [{user.first_name} {user.last_name}] '{message}'".replace("\n", " "))
     elif message is not None and attach is None:
         params['message'] = message
+        logging.info(f"Message to [{user.first_name} {user.last_name}] '{message}'".replace("\n", " "))
     elif message is None and attach is not None:
         params['attachment'] = attach
     if not parse_links:
         params['dont_parse_links'] = 1
 
     vk.method('messages.send', params)
-    logging.info(f"[{user.last_name} {user.last_name}] Файлов слишком много")
 
 
-def send_keyboard(user_id, kb, message, attach=None):
+
+def send_keyboard(user, kb, message, attach=None):
     if attach is None:
         vk.method('messages.send',
-                  {'user_id': user_id, 'keyboard': kb, 'message': message, 'random_id': get_random_id()})
+                  {'user_id': user.user_id, 'keyboard': kb, 'message': message, 'random_id': get_random_id()})
     else:
-        vk.method('messages.send', {'user_id': user_id, 'keyboard': kb, 'message': message, 'attachment': attach,
+        vk.method('messages.send', {'user_id': user.user_id, 'keyboard': kb, 'message': message, 'attachment': attach,
                                     'random_id': get_random_id()})
+
+    if message is not None:
+        logging.info(f"Message to [{user.first_name} {user.last_name}] '{message}'".replace("\n", " "))

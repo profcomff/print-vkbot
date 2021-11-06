@@ -76,12 +76,12 @@ def validate_proff(user):
         data = db.get_user(user.user_id)
         if r.json() and data is None:
             db.add_user(user.user_id, surname, number)
-            kb.auth_button(user.user_id, "Поздравляю! Проверка пройдена и данные сохранёны для этого аккаунта вк. "
+            kb.auth_button(user, "Поздравляю! Проверка пройдена и данные сохранёны для этого аккаунта вк. "
                                          "Можете присылать pdf.")
             return True
         elif r.json() and data is not None:
             db.update_user(user.user_id, surname, number)
-            kb.auth_button(user.user_id, "Поздравляю! Проверка пройдена и данные обновлены.")
+            kb.auth_button(user, "Поздравляю! Проверка пройдена и данные обновлены.")
             return True
         elif r.json() is False and data is None:
             vk.write_msg(user, "Проверка не пройдена. Удостоверьтесь что вы состоите в профкоме и правильно "
@@ -122,11 +122,11 @@ def message_analyzer(user):
         if len(user.message) > 0:
             for word in ru.help_ans.keys():
                 if word in user.message.lower():
-                    kb.auth_button(user.user_id)
+                    kb.auth_button(user)
                     return
 
         if len(user.message) <= 0 and len(user.attachments) == 0:
-            kb.auth_button(user.user_id)
+            kb.auth_button(user)
         elif len(user.message) > 0 and len(user.attachments) == 0:
             validate_proff(user)
         elif len(user.message) <= 0 and len(user.attachments) > 0:
