@@ -21,6 +21,7 @@ help_ans = {
     'как ': kb_ans['help'],
     'инструкция': kb_ans['help'],
     'начать': kb_ans['help'],
+    'Начать': kb_ans['help'],
     'старт': kb_ans['help'],
     'start': kb_ans['help']
 }
@@ -28,7 +29,7 @@ help_ans = {
 errors = {
     'not_available': 'К сожалению, действие временно недоступно',
     'im_broken': 'Глубоко внутри меня что-то сломалось...',
-    'kb_error': 'Ошибка клавиатуры, попробуйте текстом',
+    'kb_error': 'Ошибка клавиатуры, что-то пошло не так',
     'bd_error': 'Ошибка базы данных. Попробуйте позже.'
 }
 
@@ -38,17 +39,3 @@ greetings = {
     'day': 'Добрый день',
     'evening': 'Добрый вечер'
 }
-
-
-def numerals_days(n):
-    n = n % 100
-    if (10 < n) and (n < 20):
-        return ' дней'
-    else:
-        n = n % 10
-        if (n == 0) or (n >= 5):
-            return ' дней'
-        elif n == 1:
-            return ' день'
-        elif (n > 1) and (n < 5):
-            return ' дня'

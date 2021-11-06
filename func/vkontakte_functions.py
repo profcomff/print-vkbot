@@ -1,18 +1,13 @@
-# sessiyabot/func/vk_functions
-# - vk functions
 # Marakulin Andrey @annndruha
-# 2019
-import time
-import datetime
-import json
-import traceback
-import requests
+# 2021
+import logging
 import configparser
 
 from vk_api import VkApi
 from vk_api.utils import get_random_id
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from vk_api.keyboard import VkKeyboard
+
 
 config = configparser.ConfigParser()
 config.read('auth.ini')
@@ -23,6 +18,8 @@ API_VERSION = "5.120"
 
 vk = VkApi(token=GROUP_TOKEN, api_version=API_VERSION)  # Auth with community token
 longpoll = VkBotLongPoll(vk, group_id=GROUP_ID)  # Create a longpull variable
+VkKeyboard = VkKeyboard
+VkBotEventType = VkBotEventType
 
 
 class User:
@@ -45,8 +42,8 @@ def user_get(user_id):
     return vk.method('users.get', {'user_ids': user_id})
 
 
-def write_msg(user_id, message=None, attach=None, parse_links=False):
-    params = {'user_id': user_id, 'random_id': get_random_id()}
+def write_msg(user, message=None, attach=None, parse_links=False):
+    params = {'user_id': user.user_id, 'random_id': get_random_id()}
 
     if message is not None and attach is not None:
         params['message'] = message
@@ -59,6 +56,7 @@ def write_msg(user_id, message=None, attach=None, parse_links=False):
         params['dont_parse_links'] = 1
 
     vk.method('messages.send', params)
+    logging.info(f"[{user.last_name} {user.last_name}] Файлов слишком много")
 
 
 def send_keyboard(user_id, kb, message, attach=None):
@@ -68,25 +66,3 @@ def send_keyboard(user_id, kb, message, attach=None):
     else:
         vk.method('messages.send', {'user_id': user_id, 'keyboard': kb, 'message': message, 'attachment': attach,
                                     'random_id': get_random_id()})
-
-
-# def get_attach_str(user_id):
-#     getMessagesUploadServer = vk.method('photos.getMessagesUploadServer', {'peer_id': user_id})
-#     upload_url = getMessagesUploadServer['upload_url']
-#
-#     file = {'photo': open('data/temp.png', 'rb')}
-#
-#     ur = requests.post(upload_url, files=file).json()
-#
-#     photo = vk.method('photos.saveMessagesPhoto', {'photo': ur['photo'], 'server': ur['server'], 'hash': ur['hash']})
-#
-#     type = 'photo'
-#     media_id = str(photo[0]['id'])
-#     owner_id = str(photo[0]['owner_id'])
-#     access_key = photo[0]['access_key']
-#     at = type + owner_id + '_' + media_id + '_' + access_key
-#     return at
-#
-#
-# def get_doc_info(docid):
-#     return vk.method('docs.getById', {'docs': docid + ',' + docid})

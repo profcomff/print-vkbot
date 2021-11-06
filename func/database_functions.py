@@ -2,7 +2,6 @@
 # 2021
 
 import psycopg2
-
 import configparser
 
 config = configparser.ConfigParser()
