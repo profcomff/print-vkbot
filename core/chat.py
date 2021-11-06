@@ -6,12 +6,12 @@ import time
 import traceback
 import requests
 import configparser
+import psycopg2
 
 import core.answers as ru
 import func.vkontakte_functions as vk
 import func.database_functions as db
 import core.keybords as kb
-
 
 config = configparser.ConfigParser()
 config.read('auth.ini')
@@ -44,19 +44,17 @@ def get_attachments(user):
         r = requests.get(url, allow_redirects=True)
         with open(os.path.join(PDF_PATH, str(user.user_id), title), 'wb') as f:
             f.write(r.content)
-        vk.write_msg(user.user_id, f"{title}\nПодготовка к печати...")
-        return os.path.join(PDF_PATH, str(user.user_id), title)
+        vk.write_msg(user.user_id, f"Файл {title} получен.\nПодготовка к печати...")
+        return os.path.join(PDF_PATH, str(user.user_id), title), title
 
 
-def order_print(user, requisites=None):
-    pdf_path = get_attachments(user)
+def order_print(user, requisites):
+    pdf_path, title = get_attachments(user)
+    vk_id, surname, number = requisites
     if pdf_path is not None:
         vk.write_msg(user.user_id, "Попытка заказать печать")
-        # TODO: dgh
-        # r = requests.post('https://app.profcomff.com/print', data={'surname': 'value',
-        #                                                            'number': user.last_name,
-        #                                                            'filename': 'test'})
-        # logging.info(r)
+        r = requests.post(PRINT_URL + '/file', data={'surname': surname, 'number': number, 'filename': title})
+        logging.info('fff')
 
 
 def validate_proff(user):
@@ -95,10 +93,10 @@ def validate_proff(user):
 
 def check_proff(user):
     if db.get_user(user.user_id) is not None:
-        _, surname, number = db.get_user(user.user_id)
+        vk_id, surname, number = db.get_user(user.user_id)
         r = requests.get(GET_MEMBER_URL, params=dict(surname=surname, number=number, v=1))
         if r.json():
-            return True
+            return vk_id, surname, number
         else:
             vk.write_msg(user.user_id, "Для использования принтера необходимо авторизоваться.\n"
                                        "Введите фамилию и номер профсоюзного билета в формате:")
@@ -122,13 +120,18 @@ def message_analyzer(user):
         elif len(user.message) > 0 and len(user.attachments) == 0:
             validate_proff(user)
         elif len(user.message) <= 0 and len(user.attachments) > 0:
-            if check_proff(user):
-                order_print(user)
+            requisites = check_proff(user)
+            if requisites is not None:
+                order_print(user, requisites)
         elif len(user.message) > 0 and len(user.attachments) > 0:
-            if check_proff(user):
-                order_print(user)
+            requisites = check_proff(user)
+            if requisites is not None:
+                order_print(user, requisites)
 
     except OSError as err:
+        raise err
+    except psycopg2.Error as err:
+        vk.write_msg(user.user_id, ru.errors['bd_error'])
         raise err
     except BaseException as err:
         ans = ru.errors['im_broken']
@@ -168,6 +171,19 @@ def chat_loop():
                 time.sleep(1)
             except:
                 logging.error("Recconnect VK failed")
+                time.sleep(10)
+
+        except psycopg2.Error as err:
+            logging.error("Database Error (longpull_loop), description:")
+            traceback.print_tb(err.__traceback__)
+            logging.error(err.args)
+            try:
+                logging.error("Try to recconnect database...")
+                db.reconnect()
+                logging.error("Database connected successful")
+                time.sleep(1)
+            except:
+                logging.error("Recconnect database failed")
                 time.sleep(10)
 
         except BaseException as err:

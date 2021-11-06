@@ -5,6 +5,7 @@ import logging
 import traceback
 import requests
 import configparser
+import psycopg2
 
 import core.answers as ru
 import func.vkontakte_functions as vk
@@ -72,6 +73,9 @@ def keyboard_browser(user, str_payload):
                 auth_button(user.user_id, ru.kb_ans['help'])
 
     except OSError as err:
+        raise err
+    except psycopg2.Error as err:
+        vk.write_msg(user.user_id, ru.errors['bd_error'])
         raise err
     except BaseException as err:
         ans = ru.errors['kb_error']

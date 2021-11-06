@@ -33,13 +33,13 @@ def get_user(user_id):
 def add_user(user_id, surname, number):
     with connection.cursor() as cur:
         cur.execute(
-            "INSERT INTO printer_bot.vk_users (vk_id,last_name,proff_number) VALUES (%s,%s,%s);",
+            "INSERT INTO printer_bot.vk_users (vk_id,surname,number) VALUES (%s,%s,%s);",
             (user_id, surname, number))
         connection.commit()
 
 
 def update_user(user_id, surname, number):
     with connection.cursor() as cur:
-        cur.execute("UPDATE printer_bot.vk_users SET last_name=%s,proff_number=%s WHERE vk_id=%s;",
+        cur.execute("UPDATE printer_bot.vk_users SET surname=%s,number=%s WHERE vk_id=%s;",
                     (surname, number, user_id))
         connection.commit()
