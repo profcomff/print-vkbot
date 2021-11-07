@@ -20,10 +20,10 @@
 
 ### Запуск в докере
 
-If you use  docker, you can run bot with this example docker command:
+Запуск контейнера
 
 ```bash
-docker run -d --name print-bot --restart always -v /root/print-bot:/print-bot imagename
+docker run -d --name print-bot --restart always -v /root/print-bot:/print-bot imageid
 ```
 
 Положите `auth.ini` в `/root/print-bot` и перезапустите контейнер:
