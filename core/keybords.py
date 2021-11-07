@@ -17,13 +17,6 @@ config.read('auth.ini')
 PRINT_URL = config["print_server"]["print_url"]
 
 
-def main_page(user, ans="Привет!", attach=None):
-    kb = vk.VkKeyboard(one_time=False)
-
-    kb.add_button("Инструкция", color='primary', payload=["command", "help"])
-    vk.send_keyboard(user, kb.get_keyboard(), ans, attach=attach)
-
-
 def check_auth(user_id):
     if db.get_user(user_id) is not None:
         _, surname, number = db.get_user(user_id)
@@ -36,12 +29,19 @@ def check_auth(user_id):
         return False
 
 
+def main_page(user, ans="Привет!", attach=None):
+    kb = vk.VkKeyboard(one_time=False)
+
+    kb.add_button("Инструкция", color='primary', payload={"command": "help"})
+    vk.send_keyboard(user, kb.get_keyboard(), ans, attach=attach)
+
+
 def auth_button(user, ans=ru.kb_ans['help']):
     kb = vk.VkKeyboard(inline=True)
     if check_auth(user.user_id):
-        kb.add_button("Авторизовано", color='positive', payload=["command", "auth_true"])
+        kb.add_button("Авторизовано", color='positive', payload={"command": "auth_true"})
     else:
-        kb.add_button("Не авторизовано", color='negative', payload=["command", "auth_false"])
+        kb.add_button("Не авторизовано", color='negative', payload={"command": "auth_false"})
         if ru.kb_ans['help'] == ans:
             ans += '\n\nНо для начала нужно авторизоваться. Нажмите на кнопку ниже:'
 
@@ -50,29 +50,26 @@ def auth_button(user, ans=ru.kb_ans['help']):
 
 def keyboard_browser(user, str_payload):
     try:
-        payload = json.loads(str_payload)
-        if not isinstance(payload, list):
+        payload = json.loads(str_payload)  # dict
+        if payload['command'] == 'start':
             main_page(user, "Привет!")
-        if payload[0] == 'command':
-            if payload[1] == 'auth_true':
-                if check_auth(user.user_id):
-                    vk.write_msg(user, "Вы уже успешно авторизованы. Можете присылать файл на печать.")
-                else:
-                    vk.write_msg(user, "Для использования принтера необходимо авторизоваться.\n"
-                                               "Введите фамилию и номер профсоюзного билета в формате:")
-                    vk.write_msg(user, "Иванов\n1234567")
-            if payload[1] == 'auth_false':
-                if check_auth(user.user_id):
-                    vk.write_msg(user, "Вы уже успешно авторизованы. Можете присылать файл на печать.")
-                else:
-                    vk.write_msg(user, "Для использования принтера необходимо авторизоваться.\n"
-                                               "Введите фамилию и номер профсоюзного билета в формате:")
-                    vk.write_msg(user, "Иванов\n1234567")
-            if payload[1] == 'help':
-                auth_button(user)
-            if payload[1] == 'start':
-                main_page(user, "Привет!")
-                auth_button(user)
+            auth_button(user)
+        if payload['command'] == 'auth_true':
+            if check_auth(user.user_id):
+                vk.write_msg(user, "Вы уже успешно авторизованы. Можете присылать файл на печать.")
+            else:
+                vk.write_msg(user, "Для использования принтера необходимо авторизоваться.\n"
+                                   "Введите фамилию и номер профсоюзного билета в формате:")
+                vk.write_msg(user, "Иванов\n1234567")
+        if payload['command'] == 'auth_false':
+            if check_auth(user.user_id):
+                vk.write_msg(user, "Вы уже успешно авторизованы. Можете присылать файл на печать.")
+            else:
+                vk.write_msg(user, "Для использования принтера необходимо авторизоваться.\n"
+                                   "Введите фамилию и номер профсоюзного билета в формате:")
+                vk.write_msg(user, "Иванов\n1234567")
+        if payload['command'] == 'help':
+            auth_button(user)
 
     except OSError as err:
         raise err
