@@ -1,6 +1,5 @@
 ﻿# Marakulin Andrey @annndruha
 # 2021
-
 import psycopg2
 import configparser
 

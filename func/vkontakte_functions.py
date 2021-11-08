@@ -60,7 +60,6 @@ def write_msg(user, message=None, attach=None, parse_links=False):
     vk.method('messages.send', params)
 
 
-
 def send_keyboard(user, kb, message, attach=None):
     if attach is None:
         vk.method('messages.send',

@@ -22,16 +22,16 @@ PRINT_URL = config["print_server"]["print_url"]
 
 def get_attachments(user):
     if len(user.attachments) > 1:
-        vk.write_msg(user, "Файлов слишком много. Прикрепите только один файл pdf.")
+        vk.write_msg(user, ru.print_ans["many_files"])
         
         return
     if user.attachments[0]['type'] != 'doc':
-        vk.write_msg(user, "Я умею печатать только документы в формате pdf.")
+        vk.write_msg(user, ru.print_ans["only_pdfs"])
         return
     if user.attachments[0]['type'] == 'doc':
         ext = user.attachments[0]['doc']['ext']
         if ext != 'pdf':
-            vk.write_msg(user, "Я умею печатать только документы в формате pdf.")
+            vk.write_msg(user, ru.print_ans["only_pdfs"])
             return
         title = user.attachments[0]['doc']['title']
         url = user.attachments[0]['doc']['url']
@@ -44,7 +44,7 @@ def get_attachments(user):
         r = requests.get(url, allow_redirects=True)
         with open(os.path.join(PDF_PATH, str(user.user_id), title), 'wb') as f:
             f.write(r.content)
-        vk.write_msg(user, f"Файл {title} получен.\nПодготовка к печати...")
+        vk.write_msg(user, ru.print_ans["file_uploaded"].format(title))
         return os.path.join(PDF_PATH, str(user.user_id), title), title
 
 
@@ -60,11 +60,11 @@ def order_print(user, requisites):
             files = {'file': (title, open(pdf_path, 'rb'), 'application/pdf', {'Expires': '0'})}
             rfile = requests.post(PRINT_URL + '/file/' + pin, files=files)
             if rfile.status_code == 200:
-                vk.write_msg(user, f"✔ Файл успешно отправлен на печать.\nPIN: {pin}")
+                vk.write_msg(user, ru.print_ans["send_to_print"].format(pin))
             else:
-                vk.write_msg(user, "Ошибка сервера печати. Попробуйте позже.")
+                vk.write_msg(user, ru.errors["print_err"])
         else:
-            vk.write_msg(user, "Ошибка сервера печати. Попробуйте позже.")
+            vk.write_msg(user, ru.errors["print_err"])
 
 
 def validate_proff(user):
@@ -76,29 +76,25 @@ def validate_proff(user):
         data = db.get_user(user.user_id)
         if r.json() and data is None:
             db.add_user(user.user_id, surname, number)
-            kb.auth_button(user, "Поздравляю! Проверка пройдена и данные сохранёны для этого аккаунта вк. "
-                                         "Можете присылать pdf.")
+            kb.auth_button(user, ru.val_ans["val_pass"])
             return True
         elif r.json() and data is not None:
             db.update_user(user.user_id, surname, number)
-            kb.auth_button(user, "Поздравляю! Проверка пройдена и данные обновлены.")
+            kb.auth_button(user, ru.val_ans["val_pass_update"])
             return True
         elif r.json() is False and data is None:
-            vk.write_msg(user, "Проверка не пройдена. Удостоверьтесь что вы состоите в профкоме и правильно "
-                                       "ввели данные.\n\nВведите фамилию и номер профсоюзного билета в формате:")
-            vk.write_msg(user, "Иванов\n1234567")
+            vk.write_msg(user, ru.val_ans["val_fail"])
+            vk.write_msg(user, ru.val_ans["exp_name"])
         elif r.json() is False and data is not None:
-            vk.write_msg(user, "Проверка не пройдена. Удостоверьтесь что вы состоите в профкоме и правильно "
-                                       "ввели данные.\n\nВведите фамилию и номер профсоюзного билета в формате:")
-            vk.write_msg(user, "Иванов\n1234567")
+            vk.write_msg(user, ru.val_ans["val_fail"])
+            vk.write_msg(user, ru.val_ans["exp_name"])
     else:
         if db.get_user(user.user_id) is None:
-            vk.write_msg(user, "Введите фамилию и номер профсоюзного билета в формате:")
-            vk.write_msg(user, "Иванов\n1234567")
+            vk.write_msg(user, ru.val_ans["val_need"])
+            vk.write_msg(user, ru.val_ans["exp_name"])
         else:
-            vk.write_msg(user, "Для того чтобы обновить данные авторизации "
-                                       "введите фамилию и номер профсоюзного билета в формате:")
-            vk.write_msg(user, "Иванов\n1234567")
+            vk.write_msg(user, ru.val_ans["val_update"])
+            vk.write_msg(user, ru.val_ans["exp_name"])
 
 
 def check_proff(user):
@@ -108,13 +104,11 @@ def check_proff(user):
         if r.json():
             return vk_id, surname, number
         else:
-            vk.write_msg(user, "Для использования принтера необходимо авторизоваться.\n"
-                                       "Введите фамилию и номер профсоюзного билета в формате:")
-            vk.write_msg(user, "Иванов\n1234567")
+            vk.write_msg(user, ru.val_ans["val_need"])
+            vk.write_msg(user, ru.val_ans["exp_name"])
     else:
-        vk.write_msg(user, "Для использования принтера необходимо авторизоваться.\n"
-                                   "Введите фамилию и номер профсоюзного билета в формате:")
-        vk.write_msg(user, "Иванов\n1234567")
+        vk.write_msg(user, ru.val_ans["val_need"])
+        vk.write_msg(user, ru.val_ans["exp_name"])
 
 
 def message_analyzer(user):
@@ -122,6 +116,7 @@ def message_analyzer(user):
         if len(user.message) > 0:
             for word in ru.help_ans.keys():
                 if word in user.message.lower():
+                    kb.main_page(user)
                     kb.auth_button(user)
                     return
 

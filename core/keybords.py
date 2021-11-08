@@ -29,21 +29,21 @@ def check_auth(user_id):
         return False
 
 
-def main_page(user, ans="Привет!", attach=None):
+def main_page(user, ans=ru.kb_ans["hey"], attach=None):
     kb = vk.VkKeyboard(one_time=False)
 
-    kb.add_button("Инструкция", color='primary', payload='{"command":"help"}')
+    kb.add_button(ru.kb_ans["inst"], color='primary', payload='{"command":"help"}')
     vk.send_keyboard(user, kb.get_keyboard(), ans, attach=attach)
 
 
 def auth_button(user, ans=ru.kb_ans['help']):
     kb = vk.VkKeyboard(inline=True)
     if check_auth(user.user_id):
-        kb.add_button("Авторизовано", color='positive', payload='{"command":"auth_true"}')
+        kb.add_button(ru.kb_ans["auth"], color='positive', payload='{"command":"auth_true"}')
     else:
-        kb.add_button("Не авторизовано", color='negative', payload='{"command":"auth_false"}')
+        kb.add_button(ru.kb_ans["notauth"], color='negative', payload='{"command":"auth_false"}')
         if ru.kb_ans['help'] == ans:
-            ans += '\n\nНо для начала нужно авторизоваться. Нажмите на кнопку ниже:'
+            ans += ru.val_ans["val_addition"]
 
     vk.send_keyboard(user, kb.get_keyboard(), ans)
 
@@ -59,18 +59,16 @@ def keyboard_browser(user, str_payload):
             auth_button(user)
         if payload["command"] == 'auth_true':
             if check_auth(user.user_id):
-                vk.write_msg(user, "Вы уже успешно авторизованы. Можете присылать файл на печать.")
+                vk.write_msg(user, ru.val_ans["val_already"])
             else:
-                vk.write_msg(user, "Для использования принтера необходимо авторизоваться.\n"
-                                   "Введите фамилию и номер профсоюзного билета в формате:")
-                vk.write_msg(user, "Иванов\n1234567")
+                vk.write_msg(user, ru.val_ans["val_need"])
+                vk.write_msg(user, ru.val_ans["exp_name"])
         if payload["command"] == 'auth_false':
             if check_auth(user.user_id):
-                vk.write_msg(user, "Вы уже успешно авторизованы. Можете присылать файл на печать.")
+                vk.write_msg(user, ru.val_ans["val_already"])
             else:
-                vk.write_msg(user, "Для использования принтера необходимо авторизоваться.\n"
-                                   "Введите фамилию и номер профсоюзного билета в формате:")
-                vk.write_msg(user, "Иванов\n1234567")
+                vk.write_msg(user, ru.val_ans["val_need"])
+                vk.write_msg(user, ru.val_ans["exp_name"])
 
     except OSError as err:
         raise err
