@@ -4,8 +4,6 @@
 
 Сделан для https://vk.com/profcomff
 
-![logo.jpg](C:\dev\github\print-bot\logo.jpg)
-
 ## Ключевые особенности
 
 * Возможность отправлять файлы pdf на сервер печати
