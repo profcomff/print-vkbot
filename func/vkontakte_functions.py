@@ -63,10 +63,19 @@ def write_msg(user, message=None, attach=None, parse_links=False):
 def send_keyboard(user, kb, message, attach=None):
     if attach is None:
         vk.method('messages.send',
-                  {'user_id': user.user_id, 'keyboard': kb, 'message': message, 'random_id': get_random_id()})
+                  {'user_id': user.user_id,
+                   'keyboard': kb,
+                   'message': message,
+                   'dont_parse_links': 1,
+                   'random_id': get_random_id()})
     else:
-        vk.method('messages.send', {'user_id': user.user_id, 'keyboard': kb, 'message': message, 'attachment': attach,
-                                    'random_id': get_random_id()})
+        vk.method('messages.send',
+                  {'user_id': user.user_id,
+                   'keyboard': kb,
+                   'message': message,
+                   'attachment': attach,
+                   'dont_parse_links': 1,
+                   'random_id': get_random_id()})
 
     if message is not None:
         logging.info(f'[Msg to {user.first_name} {user.last_name}] {message}'.replace('\n', ' '))

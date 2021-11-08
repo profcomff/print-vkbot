@@ -33,6 +33,8 @@ def main_page(user, ans=ru.kb_ans['hey'], attach=None):
     kb = vk.VkKeyboard(one_time=False)
 
     kb.add_button(ru.kb_ans['inst'], color='primary', payload='{"command":"help"}')
+    kb.add_line()
+    kb.add_button(ru.kb_ans['conf'], color='primary', payload='{"command":"conf"}')
     vk.send_keyboard(user, kb.get_keyboard(), ans, attach=attach)
 
 
@@ -57,6 +59,8 @@ def keyboard_browser(user, str_payload):
         if payload['command'] == 'help':
             main_page(user)
             auth_button(user)
+        if payload['command'] == 'conf':
+            main_page(user, ru.kb_ans['conf_full'])
         if payload['command'] == 'auth_true':
             if check_auth(user.user_id):
                 vk.write_msg(user, ru.val_ans['val_already'])
