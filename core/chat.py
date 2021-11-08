@@ -80,7 +80,7 @@ def validate_proff(user):
             return True
         elif r.json() and data is not None:
             db.update_user(user.user_id, surname, number)
-            kb.auth_button(user, ru.val_ans["val_pass_update"])
+            kb.auth_button(user, ru.val_ans["val_update_pass"])
             return True
         elif r.json() is False and data is None:
             vk.write_msg(user, ru.val_ans["val_fail"])
@@ -93,7 +93,7 @@ def validate_proff(user):
             vk.write_msg(user, ru.val_ans["val_need"])
             vk.write_msg(user, ru.val_ans["exp_name"])
         else:
-            vk.write_msg(user, ru.val_ans["val_update"])
+            vk.write_msg(user, ru.val_ans["val_update_fail"])
             vk.write_msg(user, ru.val_ans["exp_name"])
 
 
@@ -114,21 +114,19 @@ def check_proff(user):
 def message_analyzer(user):
     try:
         if len(user.message) > 0:
-            for word in ru.help_ans.keys():
+            for word in ru.ask_help:
                 if word in user.message.lower():
                     kb.main_page(user)
                     kb.auth_button(user)
                     return
 
-        if len(user.message) <= 0 and len(user.attachments) == 0:
-            kb.auth_button(user)
-        elif len(user.message) > 0 and len(user.attachments) == 0:
-            validate_proff(user)
-        elif len(user.message) <= 0 and len(user.attachments) > 0:
-            requisites = check_proff(user)
-            if requisites is not None:
-                order_print(user, requisites)
-        elif len(user.message) > 0 and len(user.attachments) > 0:
+        if len(user.attachments) == 0:
+            if len(user.message) > 0:
+                validate_proff(user)
+            else:
+                kb.main_page(user)
+                kb.auth_button(user)
+        else:
             requisites = check_proff(user)
             if requisites is not None:
                 order_print(user, requisites)
