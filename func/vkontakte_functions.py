@@ -14,7 +14,7 @@ config.read('auth.ini')
 
 GROUP_ID = config['auth_vk']['group_id']
 GROUP_TOKEN = config['auth_vk']['group_token']
-API_VERSION = "5.120"
+API_VERSION = '5.120'
 
 vk = VkApi(token=GROUP_TOKEN, api_version=API_VERSION)  # Auth with community token
 longpoll = VkBotLongPoll(vk, group_id=GROUP_ID)  # Create a longpull variable
@@ -48,10 +48,10 @@ def write_msg(user, message=None, attach=None, parse_links=False):
     if message is not None and attach is not None:
         params['message'] = message
         params['attachment'] = attach
-        logging.info(f"Message to [{user.first_name} {user.last_name}] '{message}'".replace("\n", " "))
+        logging.info(f'[Msg to {user.first_name} {user.last_name}] {message}'.replace('\n', ' '))
     elif message is not None and attach is None:
         params['message'] = message
-        logging.info(f"Message to [{user.first_name} {user.last_name}] '{message}'".replace("\n", " "))
+        logging.info(f'[Msg to {user.first_name} {user.last_name}] {message}'.replace('\n', ' '))
     elif message is None and attach is not None:
         params['attachment'] = attach
     if not parse_links:
@@ -69,4 +69,4 @@ def send_keyboard(user, kb, message, attach=None):
                                     'random_id': get_random_id()})
 
     if message is not None:
-        logging.info(f"Message to [{user.first_name} {user.last_name}] '{message}'".replace("\n", " "))
+        logging.info(f'[Msg to {user.first_name} {user.last_name}] {message}'.replace('\n', ' '))

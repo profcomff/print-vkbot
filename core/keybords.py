@@ -29,21 +29,21 @@ def check_auth(user_id):
         return False
 
 
-def main_page(user, ans=ru.kb_ans["hey"], attach=None):
+def main_page(user, ans=ru.kb_ans['hey'], attach=None):
     kb = vk.VkKeyboard(one_time=False)
 
-    kb.add_button(ru.kb_ans["inst"], color='primary', payload='{"command":"help"}')
+    kb.add_button(ru.kb_ans['inst'], color='primary', payload='{"command":"help"}')
     vk.send_keyboard(user, kb.get_keyboard(), ans, attach=attach)
 
 
 def auth_button(user, ans=ru.kb_ans['help']):
     kb = vk.VkKeyboard(inline=True)
     if check_auth(user.user_id):
-        kb.add_button(ru.kb_ans["auth"], color='positive', payload='{"command":"auth_true"}')
+        kb.add_button(ru.kb_ans['auth'], color='positive', payload='{"command":"auth_true"}')
     else:
-        kb.add_button(ru.kb_ans["notauth"], color='negative', payload='{"command":"auth_false"}')
+        kb.add_button(ru.kb_ans['notauth'], color='negative', payload='{"command":"auth_false"}')
         if ru.kb_ans['help'] == ans:
-            ans += ru.val_ans["val_addition"]
+            ans += ru.val_ans['val_addition']
 
     vk.send_keyboard(user, kb.get_keyboard(), ans)
 
@@ -51,24 +51,24 @@ def auth_button(user, ans=ru.kb_ans['help']):
 def keyboard_browser(user, str_payload):
     try:
         payload = json.loads(str_payload)  # From str to dict
-        if payload["command"] == 'start':
-            main_page(user, "Привет!")
+        if payload['command'] == 'start':
+            main_page(user)
             auth_button(user)
-        if payload["command"] == 'help':
-            main_page(user, "Привет!")
+        if payload['command'] == 'help':
+            main_page(user)
             auth_button(user)
-        if payload["command"] == 'auth_true':
+        if payload['command'] == 'auth_true':
             if check_auth(user.user_id):
-                vk.write_msg(user, ru.val_ans["val_already"])
+                vk.write_msg(user, ru.val_ans['val_already'])
             else:
-                vk.write_msg(user, ru.val_ans["val_need"])
-                vk.write_msg(user, ru.val_ans["exp_name"])
-        if payload["command"] == 'auth_false':
+                vk.write_msg(user, ru.val_ans['val_need'])
+                vk.write_msg(user, ru.val_ans['exp_name'])
+        if payload['command'] == 'auth_false':
             if check_auth(user.user_id):
-                vk.write_msg(user, ru.val_ans["val_already"])
+                vk.write_msg(user, ru.val_ans['val_already'])
             else:
-                vk.write_msg(user, ru.val_ans["val_need"])
-                vk.write_msg(user, ru.val_ans["exp_name"])
+                vk.write_msg(user, ru.val_ans['val_need'])
+                vk.write_msg(user, ru.val_ans['exp_name'])
 
     except OSError as err:
         raise err
@@ -78,5 +78,5 @@ def keyboard_browser(user, str_payload):
     except BaseException as err:
         ans = ru.errors['kb_error']
         vk.write_msg(user, ans)
-        logging.error(f"Unknown Exception (keyboard_browser), description:\n{str(err.args)}")
+        logging.error(f'Unknown Exception (keyboard_browser), description:\n{str(err.args)}')
         traceback.print_tb(err.__traceback__)
