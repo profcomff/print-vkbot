@@ -7,7 +7,7 @@ name: Docker CI to Github Packages
 
 on:
   push:
-    branches: ['release']
+    branches: ['master']
 
 env:
   REGISTRY: ghcr.io
