@@ -18,7 +18,7 @@
 * Создайте виртуальное окружение `create_venv.bat` или `pip install -r requirements.txt`
 * Запуск: `python print-bot.py`
 
-### Запуск в докере
+## Запуск в докере
 
 Запуск контейнера
 
