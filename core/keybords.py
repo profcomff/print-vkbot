@@ -79,6 +79,11 @@ def keyboard_browser(user, str_payload):
     except psycopg2.Error as err:
         vk.write_msg(user, ru.errors['bd_error'])
         raise err
+    except json.decoder.JSONDecodeError as err:
+        vk.write_msg(user, ru.errors['print_err'])
+        logging.error('JSONDecodeError (message_analyzer), description:')
+        traceback.print_tb(err.__traceback__)
+        logging.error(str(err.args))
     except BaseException as err:
         ans = ru.errors['kb_error']
         vk.write_msg(user, ans)

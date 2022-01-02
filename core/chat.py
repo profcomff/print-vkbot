@@ -1,6 +1,7 @@
 ﻿# Marakulin Andrey @annndruha
 # 2021
 import os
+import json
 import logging
 import time
 import traceback
@@ -136,6 +137,12 @@ def message_analyzer(user):
     except psycopg2.Error as err:
         vk.write_msg(user, ru.errors['bd_error'])
         raise err
+    except json.decoder.JSONDecodeError as err:
+        vk.write_msg(user, ru.errors['print_err'])
+        logging.error('JSONDecodeError (message_analyzer), description:')
+        traceback.print_tb(err.__traceback__)
+        logging.error(str(err.args))
+        time.sleep(1)
     except BaseException as err:
         ans = ru.errors['im_broken']
         vk.write_msg(user, ans)
