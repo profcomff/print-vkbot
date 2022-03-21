@@ -1,8 +1,9 @@
 # Print-bot
 
 ## Бот для отправки файлов на печать на принтер
+Печать через сайт: https://www.profcomff.com/work/obshkom/print
 
-Сделан для https://vk.com/profcomff
+Этот бот вк: https://vk.com/profcomff_print
 
 ## Ключевые особенности
 
