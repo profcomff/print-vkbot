@@ -144,7 +144,7 @@ def message_analyzer(user):
         traceback.print_tb(err.__traceback__)
         logging.error(str(err.args))
         time.sleep(1)
-    except BaseException as err:
+    except Exception as err:
         ans = ru.errors['im_broken']
         vk.write_msg(user, ans)
         logging.error('Unknown Exception (message_analyzer), description:')
