@@ -13,6 +13,7 @@ import core.answers as ru
 import func.vkontakte_functions as vk
 import func.database_functions as db
 import core.keybords as kb
+from vk_api.exceptions import VkApiError
 
 config = configparser.ConfigParser()
 config.read('auth.ini')
@@ -180,7 +181,7 @@ def chat_loop():
                 vk.reconnect()
                 logging.warning('VK connected successful')
                 time.sleep(1)
-            except:
+            except VkApiError:
                 logging.error('Recconnect VK failed')
                 time.sleep(10)
 
@@ -193,15 +194,13 @@ def chat_loop():
                 db.reconnect()
                 logging.warning('Database connected successful')
                 time.sleep(1)
-            except:
+            except psycopg2.Error:
                 logging.error('Recconnect database failed')
                 time.sleep(10)
 
-        except BaseException as err:
+        except Exception as err:
             logging.error('BaseException (longpull_loop), description:')
             traceback.print_tb(err.__traceback__)
             logging.error(str(err.args))
             time.sleep(5)
 
-        except:
-            logging.error('Something go wrong. (chat_loop)')
