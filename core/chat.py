@@ -115,6 +115,8 @@ def check_proff(user):
 def message_analyzer(user):
     try:
         if len(user.message) > 0:
+            if db.connection.closed:
+                db.reconnect()
             for word in ru.ask_help:
                 if word in user.message.lower():
                     kb.main_page(user)
