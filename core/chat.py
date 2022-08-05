@@ -115,8 +115,6 @@ def check_proff(user):
 def message_analyzer(user):
     try:
         if len(user.message) > 0:
-            if db.connection.closed:
-                db.reconnect()
             for word in ru.ask_help:
                 if word in user.message.lower():
                     kb.main_page(user)
@@ -158,7 +156,8 @@ def process_event(event):
         vk_user = vk.user_get(event.message['from_id'])
         user = vk.User(event.message['from_id'], event.message['text'],
                        event.message.attachments, (vk_user[0])['first_name'], (vk_user[0])['last_name'])
-
+        if db.connection.closed:
+            db.reconnect()
         if event.message.payload is not None:
             kb.keyboard_browser(user, event.message.payload)
         else:
