@@ -22,6 +22,14 @@ def reconnect():
                                   port=config['auth_db']['port'])
 
 
+def check_and_reconnect():
+    try:
+        cur = connection.cursor()
+        cur.execute('SELECT 1')
+    except psycopg2.OperationalError:
+        reconnect()
+
+
 def get_user(user_id):
     with connection.cursor() as cur:
         cur.execute('SELECT * FROM printer_bot.vk_users WHERE vk_id=%s;', (user_id,))
