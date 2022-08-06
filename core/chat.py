@@ -157,8 +157,7 @@ def process_event(event):
         vk_user = vk.user_get(event.message['from_id'])
         user = vk.User(event.message['from_id'], event.message['text'],
                        event.message.attachments, (vk_user[0])['first_name'], (vk_user[0])['last_name'])
-        if db.connection.closed:
-            db.reconnect()
+        db.check_and_reconnect()
         if event.message.payload is not None:
             kb.keyboard_browser(user, event.message.payload)
         else:
