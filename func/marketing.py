@@ -1,4 +1,3 @@
-from functools import wraps
 import json
 import requests
 import configparser
@@ -12,12 +11,12 @@ PRINT_URL = config["print_server"]["print_url"]
 
 
 def pass_if_exc(func):
-    @wraps
     def wrapper(*args, **kwargs):
         try:
             func(*args, **kwargs)
-        except:
-            pass
+        except Exception as exc:
+            print("During marketing following error occured:")
+            print(exc)
     return wrapper
 
 
