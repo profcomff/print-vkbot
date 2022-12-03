@@ -52,7 +52,7 @@ def print(**print_info):
         urljoin(MARKETING_URL, "v1/action"),
         json={
             'user_id': -2,
-            'action': 'print bot register',
+            'action': 'print bot sent',
             'additional_data': json.dumps(print_info),
             'path_from': 'https://vk.com/im',
             'path_to': urljoin(PRINT_URL, f'/file/{print_info.get("pin")}'),
@@ -66,7 +66,7 @@ def print_exc_many(**print_info):
         urljoin(MARKETING_URL, "v1/action"),
         json={
             'user_id': -2,
-            'action': 'print bot exc many',
+            'action': 'print bot sent exc many',
             'additional_data': json.dumps(print_info),
             'path_from': 'https://vk.com/im',
         }
@@ -79,7 +79,7 @@ def print_exc_format(**print_info):
         urljoin(MARKETING_URL, "v1/action"),
         json={
             'user_id': -2,
-            'action': 'print bot exc format',
+            'action': 'print bot sent exc format',
             'additional_data': json.dumps(print_info),
             'path_from': 'https://vk.com/im',
         }
@@ -92,7 +92,7 @@ def print_exc_other(**print_info):
         urljoin(MARKETING_URL, "v1/action"),
         json={
             'user_id': -2,
-            'action': 'print bot exc format',
+            'action': 'print bot sent exc other',
             'additional_data': json.dumps(print_info),
             'path_from': 'https://vk.com/im',
         }
