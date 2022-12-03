@@ -12,6 +12,7 @@ import psycopg2
 import core.answers as ru
 import func.vkontakte_functions as vk
 import func.database_functions as db
+import func.marketing as log
 import core.keybords as kb
 from vk_api.exceptions import VkApiError
 
@@ -25,15 +26,26 @@ PRINT_URL = config['print_server']['print_url']
 def get_attachments(user):
     if len(user.attachments) > 1:
         vk.write_msg(user, ru.print_ans['many_files'])
-        
+        log.print_exc_many(
+            file_count=len(user.attachments),
+            vk_id=user.user_id,
+        )
         return
     if user.attachments[0]['type'] != 'doc':
         vk.write_msg(user, ru.print_ans['only_pdfs'])
+        log.print_exc_format(
+            file_ext='image',
+            vk_id=user.user_id,
+        )
         return
     if user.attachments[0]['type'] == 'doc':
         ext = user.attachments[0]['doc']['ext']
         if ext != 'pdf':
             vk.write_msg(user, ru.print_ans['only_pdfs'])
+            log.print_exc_format(
+                file_ext=len(user.attachments[0]['doc']['ext']),
+                vk_id=user.user_id,
+            )
             return
         title = user.attachments[0]['doc']['title']
         url = user.attachments[0]['doc']['url']
@@ -53,20 +65,42 @@ def get_attachments(user):
 def order_print(user, requisites):
     attstatus = get_attachments(user)
     vk_id, surname, number = requisites
+    pin = None
     if attstatus is not None:
         pdf_path, title = attstatus
         r = requests.post(PRINT_URL + '/file', json={'surname': surname, 'number': number, 'filename': title})
         if r.status_code == 200:
             pin = r.json()['pin']
-
             files = {'file': (title, open(pdf_path, 'rb'), 'application/pdf', {'Expires': '0'})}
             rfile = requests.post(PRINT_URL + '/file/' + pin, files=files)
             if rfile.status_code == 200:
                 vk.write_msg(user, ru.print_ans['send_to_print'].format(pin))
+                log.print(
+                    vk_id=vk_id,
+                    surname=surname,
+                    number=number,
+                    pin=pin,
+                )
             else:
                 vk.write_msg(user, ru.errors['print_err'])
+                log.print_exc_other(
+                    vk_id=vk_id,
+                    surname=surname,
+                    number=number,
+                    pin=pin,
+                    status_code=rfile.status_code,
+                    description='Fail on file upload',
+                )
         else:
             vk.write_msg(user, ru.errors['print_err'])
+            log.print_exc_other(
+                vk_id=vk_id,
+                surname=surname,
+                number=number,
+                pin=pin,
+                status_code=r.status_code,
+                description='Fail on fetching code',
+            )
 
 
 def validate_proff(user):
@@ -83,13 +117,20 @@ def validate_proff(user):
         elif r.json() and data is not None:
             db.update_user(user.user_id, surname, number)
             kb.auth_button(user, ru.val_ans['val_update_pass'])
+            log.register(
+                vk_id=user.user_id,
+                surname=surname,
+                number=number,
+            )
             return True
-        elif r.json() is False and data is None:
+        elif r.json() is False:
             vk.write_msg(user, ru.val_ans['val_fail'])
             vk.write_msg(user, ru.val_ans['exp_name'])
-        elif r.json() is False and data is not None:
-            vk.write_msg(user, ru.val_ans['val_fail'])
-            vk.write_msg(user, ru.val_ans['exp_name'])
+            log.register_exc_wrong(
+                vk_id=user.user_id,
+                surname=surname,
+                number=number,
+            )
     else:
         if db.get_user(user.user_id) is None:
             vk.write_msg(user, ru.val_ans['val_need'])
