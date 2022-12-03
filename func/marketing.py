@@ -1,3 +1,4 @@
+from functools import wraps
 import json
 import requests
 import configparser
@@ -10,6 +11,17 @@ MARKETING_URL = config["marketing_url"]
 PRINT_URL = config["print_url"]
 
 
+def pass_if_exc(func):
+    @wraps
+    def wrapper(*args, **kwargs):
+        try:
+            func(*args, **kwargs)
+        except:
+            pass
+    return wrapper
+
+
+@pass_if_exc
 def register(**user_info):
     requests.post(
         urljoin(MARKETING_URL, "v1/action"),
@@ -22,6 +34,7 @@ def register(**user_info):
     )
 
 
+@pass_if_exc
 def register_exc_wrong(**user_info):
     requests.post(
         urljoin(MARKETING_URL, "v1/action"),
@@ -34,6 +47,7 @@ def register_exc_wrong(**user_info):
     )
 
 
+@pass_if_exc
 def print(**print_info):
     requests.post(
         urljoin(MARKETING_URL, "v1/action"),
@@ -47,6 +61,7 @@ def print(**print_info):
     )
 
 
+@pass_if_exc
 def print_exc_many(**print_info):
     requests.post(
         urljoin(MARKETING_URL, "v1/action"),
@@ -59,6 +74,7 @@ def print_exc_many(**print_info):
     )
 
 
+@pass_if_exc
 def print_exc_format(**print_info):
     requests.post(
         urljoin(MARKETING_URL, "v1/action"),
@@ -71,6 +87,7 @@ def print_exc_format(**print_info):
     )
 
 
+@pass_if_exc
 def print_exc_other(**print_info):
     requests.post(
         urljoin(MARKETING_URL, "v1/action"),
