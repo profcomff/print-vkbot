@@ -7,8 +7,8 @@ from urllib.parse import urljoin
 
 config = configparser.ConfigParser()
 config.read('auth.ini')
-MARKETING_URL = config["marketing_url"]
-PRINT_URL = config["print_url"]
+MARKETING_URL = config["logging"]["marketing_url"]
+PRINT_URL = config["print_server"]["print_url"]
 
 
 def pass_if_exc(func):
