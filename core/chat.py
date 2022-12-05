@@ -75,6 +75,7 @@ def order_print(user, requisites):
             rfile = requests.post(PRINT_URL + '/file/' + pin, files=files)
             if rfile.status_code == 200:
                 vk.write_msg(user, ru.print_ans['send_to_print'].format(pin))
+                vk.write_msg(user, ru.print_ans['qrprint'].format(pin))
                 log.print(
                     vk_id=vk_id,
                     surname=surname,
