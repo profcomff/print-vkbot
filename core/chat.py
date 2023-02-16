@@ -83,7 +83,7 @@ def order_print(user, requisites):
                     pin=pin,
                 )
             elif rfile.status_code == 413:
-                vk.write_msg(user, ru.errors['file_size_error'])
+                vk.write_msg(user, ru.errors['file_size_err'])
                 log.print_exc_other(
                     vk_id=vk_id,
                     surname=surname,
