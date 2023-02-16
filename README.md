@@ -3,7 +3,7 @@
 ## Бот для отправки файлов на печать на принтер
 Печать через сайт: https://www.profcomff.com/work/obshkom/print
 
-Этот бот вк: https://vk.com/profcomff_print
+Этот бот вк: http://vk.me/profcomff_print_bot
 
 ## Ключевые особенности
 
