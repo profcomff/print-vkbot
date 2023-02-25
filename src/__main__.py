@@ -1,13 +1,8 @@
-# print-bot
-# for https://vk.com/profcomff
-
-# Marakulin Andrey @annndruha
-# 2021
 import time
 import logging
 from threading import Thread
 
-import core.chat as chat
+import src.chat as chat
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',

@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     MAX_PDF_SIZE_MB: float
     # Hardcode settings
     PDF_PATH: str = 'userdata'
-    API_VERSION: str = '5.120'
+    API_VERSION: str = '5.131'
 
     class Config:
         """Pydantic BaseSettings config"""

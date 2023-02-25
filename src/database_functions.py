@@ -2,7 +2,7 @@
 # 2021
 import psycopg2
 
-from core.settings import Settings
+from src.settings import Settings
 
 settings = Settings()
 

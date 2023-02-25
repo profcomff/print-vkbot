@@ -8,7 +8,7 @@ from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from vk_api.keyboard import VkKeyboard
 
 
-from core.settings import Settings
+from src.settings import Settings
 
 settings = Settings()
 

@@ -5,17 +5,17 @@ import json
 import logging
 import time
 import traceback
+
 import requests
 import psycopg2
-
-import core.answers as ru
-import func.vkontakte_functions as vk
-import func.database_functions as db
-import func.marketing as log
-import core.keybords as kb
 from vk_api.exceptions import VkApiError
 
-from core.settings import Settings
+import src.answers as ru
+import src.vkontakte_functions as vk
+import src.database_functions as db
+import src.marketing as log
+import src.keybords as kb
+from src.settings import Settings
 
 
 settings = Settings()

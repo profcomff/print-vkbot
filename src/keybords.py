@@ -6,12 +6,12 @@ import traceback
 import requests
 import psycopg2
 
-import core.answers as ru
-import func.vkontakte_functions as vk
-import func.database_functions as db
+import src.answers as ru
+import src.vkontakte_functions as vk
+import src.database_functions as db
 
 
-from core.settings import Settings
+from src.settings import Settings
 
 
 settings = Settings()

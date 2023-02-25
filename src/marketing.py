@@ -2,7 +2,7 @@ import json
 import requests
 from urllib.parse import urljoin
 
-from core.settings import Settings
+from src.settings import Settings
 
 
 settings = Settings()
