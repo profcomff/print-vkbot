@@ -16,11 +16,10 @@ import func.marketing as log
 import core.keybords as kb
 from vk_api.exceptions import VkApiError
 
-config = configparser.ConfigParser()
-config.read('auth.ini')
+from core.settings import Settings
 
-PDF_PATH = config['settings']['pdf_path']
-PRINT_URL = config['print_server']['print_url']
+
+settings = Settings()
 
 
 def get_attachments(user):
@@ -50,16 +49,16 @@ def get_attachments(user):
         title = user.attachments[0]['doc']['title']
         url = user.attachments[0]['doc']['url']
 
-        if not os.path.exists(PDF_PATH):
-            os.makedirs(PDF_PATH)
-        if not os.path.exists(os.path.join(PDF_PATH, str(user.user_id))):
-            os.makedirs(os.path.join(PDF_PATH, str(user.user_id)))
+        if not os.path.exists(settings.PDF_PATH):
+            os.makedirs(settings.PDF_PATH)
+        if not os.path.exists(os.path.join(settings.PDF_PATH, str(user.user_id))):
+            os.makedirs(os.path.join(settings.PDF_PATH, str(user.user_id)))
 
         r = requests.get(url, allow_redirects=True)
-        with open(os.path.join(PDF_PATH, str(user.user_id), title), 'wb') as f:
+        with open(os.path.join(settings.PDF_PATH, str(user.user_id), title), 'wb') as f:
             f.write(r.content)
         vk.write_msg(user, ru.print_ans['file_uploaded'].format(title))
-        return os.path.join(PDF_PATH, str(user.user_id), title), title
+        return os.path.join(settings.PDF_PATH, str(user.user_id), title), title
 
 
 def order_print(user, requisites):
@@ -68,11 +67,11 @@ def order_print(user, requisites):
     pin = None
     if attstatus is not None:
         pdf_path, title = attstatus
-        r = requests.post(PRINT_URL + '/file', json={'surname': surname, 'number': number, 'filename': title})
+        r = requests.post(settings.PRINT_URL + '/file', json={'surname': surname, 'number': number, 'filename': title})
         if r.status_code == 200:
             pin = r.json()['pin']
             files = {'file': (title, open(pdf_path, 'rb'), 'application/pdf', {'Expires': '0'})}
-            rfile = requests.post(PRINT_URL + '/file/' + pin, files=files)
+            rfile = requests.post(settings.PRINT_URL + '/file/' + pin, files=files)
             if rfile.status_code == 200:
                 vk.write_msg(user, ru.print_ans['send_to_print'].format(pin))
                 vk.write_msg(user, ru.print_ans['qrprint'].format(pin))
@@ -119,7 +118,7 @@ def validate_proff(user):
         surname = user.message.split('\n')[0].strip()
         number = user.message.split('\n')[1].strip()
 
-        r = requests.get(PRINT_URL+'/is_union_member', params=dict(surname=surname, v=1, number=number))
+        r = requests.get(settings.PRINT_URL+'/is_union_member', params=dict(surname=surname, v=1, number=number))
         data = db.get_user(user.user_id)
         if r.json() and data is None:
             db.add_user(user.user_id, surname, number)
@@ -154,7 +153,7 @@ def validate_proff(user):
 def check_proff(user):
     if db.get_user(user.user_id) is not None:
         vk_id, surname, number = db.get_user(user.user_id)
-        r = requests.get(PRINT_URL+'/is_union_member', params=dict(surname=surname, number=number, v=1))
+        r = requests.get(settings.PRINT_URL+'/is_union_member', params=dict(surname=surname, number=number, v=1))
         if r.json():
             return vk_id, surname, number
         else:

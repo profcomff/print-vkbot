@@ -1,2 +1,7 @@
-vk-api==11.9.6
-psycopg2==2.9.1
+vk-api
+SQLAlchemy
+alembic
+requests
+pydantic
+pydantic[dotenv]
+psycopg2-binary

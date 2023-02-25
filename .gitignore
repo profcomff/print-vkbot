@@ -2,8 +2,9 @@
 .vs/
 .git/
 .idea
+.env*
 venv
 __pycache__/
 
-auth.ini
+auth*.ini
 pdf/

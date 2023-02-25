@@ -4,7 +4,7 @@ import json
 import logging
 import traceback
 import requests
-import configparser
+# import configparser
 import psycopg2
 
 import core.answers as ru
@@ -12,15 +12,20 @@ import func.vkontakte_functions as vk
 import func.database_functions as db
 
 
-config = configparser.ConfigParser()
-config.read('auth.ini')
-PRINT_URL = config["print_server"]["print_url"]
+from core.settings import Settings
+
+
+settings = Settings()
+
+# config = configparser.ConfigParser()
+# config.read('auth.ini')
+# PRINT_URL = config["print_server"]["print_url"]
 
 
 def check_auth(user_id):
     if db.get_user(user_id) is not None:
         _, surname, number = db.get_user(user_id)
-        r = requests.get(PRINT_URL+'/is_union_member', params=dict(surname=surname, number=number, v=1))
+        r = requests.get(settings.PRINT_URL+'/is_union_member', params=dict(surname=surname, number=number, v=1))
         if r.json():
             return True
         else:
