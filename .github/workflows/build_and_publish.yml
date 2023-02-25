@@ -71,7 +71,7 @@ jobs:
             --env MAX_PDF_SIZE_MB=${{ vars.MAX_PDF_SIZE_MB }} \
             --name ${{ env.CONTAINER_NAME }}_migration \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:test \
-#            alembic upgrade head
+            alembic upgrade head
       - name: Run new version
         run: |
           docker stop ${{ env.CONTAINER_NAME }} || true && docker rm ${{ env.CONTAINER_NAME }} || true
@@ -115,7 +115,7 @@ jobs:
             --env MAX_PDF_SIZE_MB=${{ vars.MAX_PDF_SIZE_MB }} \
             --name ${{ env.CONTAINER_NAME }}_migration \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
-#            alembic upgrade head
+            alembic upgrade head
       - name: Run new version
         run: |
           docker stop ${{ env.CONTAINER_NAME }} || true && docker rm ${{ env.CONTAINER_NAME }} || true
