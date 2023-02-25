@@ -2,7 +2,7 @@
 .vs/
 .git/
 .idea
-.env*
+*.env*
 venv
 __pycache__/
 
