@@ -1,17 +1,11 @@
 import json
 import requests
-# import configparser
 from urllib.parse import urljoin
 
 from core.settings import Settings
 
 
 settings = Settings()
-#
-# config = configparser.ConfigParser()
-# config.read('auth.ini')
-# MARKETING_URL = config["logging"]["marketing_url"]
-# PRINT_URL = config["print_server"]["print_url"]
 
 
 def pass_if_exc(func):

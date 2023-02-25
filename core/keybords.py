@@ -4,7 +4,6 @@ import json
 import logging
 import traceback
 import requests
-# import configparser
 import psycopg2
 
 import core.answers as ru
@@ -16,10 +15,6 @@ from core.settings import Settings
 
 
 settings = Settings()
-
-# config = configparser.ConfigParser()
-# config.read('auth.ini')
-# PRINT_URL = config["print_server"]["print_url"]
 
 
 def check_auth(user_id):

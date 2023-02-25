@@ -1,7 +1,6 @@
 # Marakulin Andrey @annndruha
 # 2021
 import logging
-# import configparser
 
 from vk_api import VkApi
 from vk_api.utils import get_random_id
@@ -13,15 +12,8 @@ from core.settings import Settings
 
 settings = Settings()
 
-# config = configparser.ConfigParser()
-# config.read('auth.ini')
-
-# GROUP_ID = config['auth_vk']['group_id']
-# BOT_TOKEN = config['auth_vk']['group_token']
-# API_VERSION = '5.120'
-
 vk = VkApi(token=settings.BOT_TOKEN, api_version=settings.API_VERSION)  # Auth with community token
-longpoll = VkBotLongPoll(vk, group_id=settings.GROUP_ID)  # Create a longpull variable
+longpoll = VkBotLongPoll(vk, group_id=settings.GROUP_ID)  # Create a long pull variable
 VkKeyboard = VkKeyboard
 VkBotEventType = VkBotEventType
 

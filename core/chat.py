@@ -6,7 +6,6 @@ import logging
 import time
 import traceback
 import requests
-import configparser
 import psycopg2
 
 import core.answers as ru
