@@ -44,10 +44,10 @@ def write_msg(user, message=None, attach=None, parse_links=False):
     if message is not None and attach is not None:
         params['message'] = message
         params['attachment'] = attach
-        logging.info(f'[Msg to {user.first_name} {user.last_name}] {message}'.replace('\n', ' '))
+        logging.info(f'[{user.user_id} {user.first_name} {user.last_name}] {message}'.replace('\n', ' '))
     elif message is not None and attach is None:
         params['message'] = message
-        logging.info(f'[Msg to {user.first_name} {user.last_name}] {message}'.replace('\n', ' '))
+        logging.info(f'[{user.user_id} {user.first_name} {user.last_name}] {message}'.replace('\n', ' '))
     elif message is None and attach is not None:
         params['attachment'] = attach
     if not parse_links:
@@ -74,4 +74,4 @@ def send_keyboard(user, kb, message, attach=None):
                    'random_id': get_random_id()})
 
     if message is not None:
-        logging.info(f'[Msg to {user.first_name} {user.last_name}] {message}'.replace('\n', ' '))
+        logging.info(f'[{user.user_id} {user.first_name} {user.last_name}] {message}'.replace('\n', ' '))

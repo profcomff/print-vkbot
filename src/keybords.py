@@ -87,10 +87,10 @@ def keyboard_browser(user, str_payload):
         vk.write_msg(user, ru.errors['print_err'])
         logging.error('JSONDecodeError (message_analyzer), description:')
         traceback.print_tb(err.__traceback__)
-        logging.error(str(err.args))
+        logging.error(err)
     except Exception as err:
         ans = ru.errors['kb_error']
         vk.write_msg(user, ans)
+        logging.error(f'Unknown Exception (keyboard_browser), description:')
         logging.error(err)
-        # logging.error(f'Unknown Exception (keyboard_browser), description:\n{str(err.args)}')
-        # traceback.print_tb(err.__traceback__)
+        traceback.print_tb(err.__traceback__)

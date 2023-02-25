@@ -32,6 +32,19 @@ def register(**user_info):
 
 
 @pass_if_exc
+def re_register(**user_info):
+    requests.post(
+        urljoin(settings.MARKETING_URL, "v1/action"),
+        json={
+            'user_id': -2,
+            'action': 'print bot repeat register',
+            'additional_data': json.dumps(user_info),
+            'path_from': 'https://vk.com/im',
+        }
+    )
+
+
+@pass_if_exc
 def register_exc_wrong(**user_info):
     requests.post(
         urljoin(settings.MARKETING_URL, "v1/action"),

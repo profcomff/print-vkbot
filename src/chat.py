@@ -124,11 +124,16 @@ def validate_proff(user):
         if r.json() and data is None:
             db.add_user(user.user_id, surname, number)
             kb.auth_button(user, ru.val_ans['val_pass'])
+            log.register(
+                vk_id=user.user_id,
+                surname=surname,
+                number=number,
+            )
             return True
         elif r.json() and data is not None:
             db.update_user(user.user_id, surname, number)
             kb.auth_button(user, ru.val_ans['val_update_pass'])
-            log.register(
+            log.re_register(
                 vk_id=user.user_id,
                 surname=surname,
                 number=number,
@@ -193,8 +198,8 @@ def message_analyzer(user):
     except json.decoder.JSONDecodeError as err:
         vk.write_msg(user, ru.errors['print_err'])
         logging.error('JSONDecodeError (message_analyzer), description:')
+        logging.error(err)
         traceback.print_tb(err.__traceback__)
-        logging.error(str(err.args))
         time.sleep(1)
     except Exception as err:
         ans = ru.errors['im_broken']
@@ -225,8 +230,8 @@ def chat_loop():
 
         except OSError as err:
             logging.error('OSError (longpull_loop), description:')
+            logging.error(err)
             traceback.print_tb(err.__traceback__)
-            logging.error(str(err.args))
             try:
                 logging.warning('Try to recconnect VK...')
                 vk.reconnect()
@@ -238,8 +243,8 @@ def chat_loop():
 
         except psycopg2.Error as err:
             logging.error('Database Error (longpull_loop), description:')
+            logging.error(err)
             traceback.print_tb(err.__traceback__)
-            logging.error(err.args)
             try:
                 logging.warning('Try to recconnect database...')
                 db.reconnect()
@@ -252,6 +257,6 @@ def chat_loop():
         except Exception as err:
             logging.error('BaseException (longpull_loop), description:')
             traceback.print_tb(err.__traceback__)
-            logging.error(str(err.args))
+            logging.error(err)
             time.sleep(5)
 
