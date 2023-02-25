@@ -72,8 +72,10 @@ def order_print(user, requisites):
             files = {'file': (title, open(pdf_path, 'rb'), 'application/pdf', {'Expires': '0'})}
             rfile = requests.post(settings.PRINT_URL + '/file/' + pin, files=files)
             if rfile.status_code == 200:
-                vk.write_msg(user, ru.print_ans['send_to_print'].format(pin))
-                vk.write_msg(user, ru.print_ans['qrprint'].format(pin))
+                kb_qr = vk.VkKeyboard(inline=True)
+                kb_qr.add_openlink_button(ru.print_ans['qr_button_text'], link=settings.PRINT_URL_QR + str(pin))
+                vk.send_keyboard(user, kb_qr.get_keyboard(), ru.print_ans['send_to_print'].format(pin))
+
                 log.print(
                     vk_id=vk_id,
                     surname=surname,
@@ -169,7 +171,7 @@ def message_analyzer(user):
             for word in ru.ask_help:
                 if word in user.message.lower():
                     kb.main_page(user)
-                    kb.auth_button(user)
+                    kb.auth_button(user, links=True)
                     return
 
         if len(user.attachments) == 0:
@@ -177,7 +179,7 @@ def message_analyzer(user):
                 validate_proff(user)
             else:
                 kb.main_page(user)
-                kb.auth_button(user)
+                kb.auth_button(user, links=True)
         else:
             requisites = check_proff(user)
             if requisites is not None:
@@ -198,8 +200,8 @@ def message_analyzer(user):
         ans = ru.errors['im_broken']
         vk.write_msg(user, ans)
         logging.error('Unknown Exception (message_analyzer), description:')
+        logging.error(err)
         traceback.print_tb(err.__traceback__)
-        logging.error(str(err.args))
 
 
 def process_event(event):

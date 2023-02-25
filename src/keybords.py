@@ -38,16 +38,24 @@ def main_page(user, ans=ru.kb_ans['hey'], attach=None):
     vk.send_keyboard(user, kb.get_keyboard(), ans, attach=attach)
 
 
-def auth_button(user, ans=ru.kb_ans['help']):
+def auth_button(user, ans=ru.kb_ans['help'], links=False):
     kb = vk.VkKeyboard(inline=True)
-    if check_auth(user.user_id):
-        kb.add_button(ru.kb_ans['auth'], color='positive', payload='{"command":"auth_true"}')
-    else:
+
+    if not check_auth(user.user_id):
         kb.add_button(ru.kb_ans['notauth'], color='negative', payload='{"command":"auth_false"}')
         if ru.kb_ans['help'] == ans:
             ans += ru.val_ans['val_addition']
+        if links:
+            kb.add_line()
 
-    vk.send_keyboard(user, kb.get_keyboard(), ans)
+    if links:
+        kb.add_openlink_button('Твой ФФ!', link='https://app.profcomff.com')
+        kb.add_openlink_button('Telegram-бот', link='https://t.me/profcomff_print_bot')
+
+    if len(kb.lines[0]) == 0:
+        vk.write_msg(user, ans)
+    else:
+        vk.send_keyboard(user, kb.get_keyboard(), ans)
 
 
 def keyboard_browser(user, str_payload):
@@ -55,24 +63,20 @@ def keyboard_browser(user, str_payload):
         payload = json.loads(str_payload)  # From str to dict
         if payload['command'] == 'start':
             main_page(user)
-            auth_button(user)
-        if payload['command'] == 'help':
+            auth_button(user, links=True)
+        elif payload['command'] == 'help':
             main_page(user)
-            auth_button(user)
-        if payload['command'] == 'conf':
+            auth_button(user, links=True)
+        elif payload['command'] == 'conf':
             main_page(user, ru.kb_ans['conf_full'])
-        if payload['command'] == 'auth_true':
+        elif payload['command'] == 'auth_false':
             if check_auth(user.user_id):
                 vk.write_msg(user, ru.val_ans['val_already'])
             else:
                 vk.write_msg(user, ru.val_ans['val_need'])
                 vk.write_msg(user, ru.val_ans['exp_name'])
-        if payload['command'] == 'auth_false':
-            if check_auth(user.user_id):
-                vk.write_msg(user, ru.val_ans['val_already'])
-            else:
-                vk.write_msg(user, ru.val_ans['val_need'])
-                vk.write_msg(user, ru.val_ans['exp_name'])
+        else:
+            vk.write_msg(user, 'Похоже бот обновился.\nВыполните команду /start')
 
     except OSError as err:
         raise err
@@ -87,5 +91,6 @@ def keyboard_browser(user, str_payload):
     except Exception as err:
         ans = ru.errors['kb_error']
         vk.write_msg(user, ans)
-        logging.error(f'Unknown Exception (keyboard_browser), description:\n{str(err.args)}')
-        traceback.print_tb(err.__traceback__)
+        logging.error(err)
+        # logging.error(f'Unknown Exception (keyboard_browser), description:\n{str(err.args)}')
+        # traceback.print_tb(err.__traceback__)
