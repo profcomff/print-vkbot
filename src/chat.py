@@ -20,6 +20,8 @@ from src.settings import Settings
 
 settings = Settings()
 
+ADS_SHOWED = []
+
 
 def get_attachments(user):
     if len(user.attachments) > 1:
@@ -76,21 +78,24 @@ def order_print(user, requisites):
                 kb_qr.add_openlink_button(ru.print_ans['qr_button_text'], link=settings.PRINT_URL_QR + str(pin))
                 vk.send_keyboard(user, kb_qr.get_keyboard(), ru.print_ans['send_to_print'].format(pin))
 
-                # === Маркетинговый эксперимент: с 11.03.23 по 22.03.23
-                # === Цель: прорекламировать бота в телеграмме
+                # === Маркетинговый эксперимент: с 11.03.23 по 31.03.23
+                # === Цель: прорекламировать бота в телеграмме (1 раз каждому пользователю)
                 # === Мониторинг: Статистика перехода по ссылке Андрея через vk.cc
                 # === а так же через маркетинг.py
-                kb_qr = vk.VkKeyboard(inline=True)
-                kb_qr.add_openlink_button('🆕 Попробовать', link='https://vk.cc/cmcREn',
-                                          payload='{"command":"telegram_ad"}')
-                vk.send_keyboard(user, kb_qr.get_keyboard(),
-                                 'Недавно у нас появился телеграм бот бесплатного принтера. Попробуйте!')
-                log.telegram_ads_click(
-                    vk_id=vk_id,
-                    surname=surname,
-                    number=number,
-                    pin=pin,
-                )
+                if vk_id not in ADS_SHOWED:
+                    kb_qr = vk.VkKeyboard(inline=True)
+                    kb_qr.add_openlink_button('🆕 Попробовать', link='https://vk.cc/cmcREn',
+                                              payload='{"command":"telegram_ad"}')
+                    vk.send_keyboard(user, kb_qr.get_keyboard(),
+                                     '🥳 Недавно у нас появился телеграм бот бесплатного принтера. Попробуйте!')
+                    log.telegram_ads_click(
+                        vk_id=vk_id,
+                        surname=surname,
+                        number=number,
+                        pin=pin,
+                    )
+                    ADS_SHOWED.append(vk_id)
+                    logging.info(f'ADS_SHOWED: {len(set(ADS_SHOWED))} unique users. Total showed: {len(ADS_SHOWED)}')
                 # === конец эксперимента
 
                 log.print(
