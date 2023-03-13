@@ -98,7 +98,7 @@ def order_print(user, requisites):
                     logging.info(f'ADS_SHOWED: {len(set(ADS_SHOWED))} unique users. Total showed: {len(ADS_SHOWED)}')
                 # === конец эксперимента
 
-                log.print(
+                log.print_success(
                     vk_id=vk_id,
                     surname=surname,
                     number=number,
@@ -281,4 +281,3 @@ def chat_loop():
             traceback.print_tb(err.__traceback__)
             logging.error(err)
             time.sleep(5)
-

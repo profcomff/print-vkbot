@@ -73,7 +73,7 @@ def register_exc_wrong(**user_info):
 
 
 @pass_if_exc
-def print(**print_info):
+def print_success(**print_info):
     requests.post(
         urljoin(settings.MARKETING_URL, "v1/action"),
         json={
