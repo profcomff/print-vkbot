@@ -13,7 +13,7 @@ def pass_if_exc(func):
         try:
             func(*args, **kwargs)
         except Exception as exc:
-            print("During marketing following error occured:")
+            print("During marketing following error occurred:")
             print(exc)
     return wrapper
 

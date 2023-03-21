@@ -61,11 +61,11 @@ def get_attachments(user):
 
 
 def order_print(user, requisites):
-    attstatus = get_attachments(user)
+    path_title = get_attachments(user)
     vk_id, surname, number = requisites
     pin = None
-    if attstatus is not None:
-        pdf_path, title = attstatus
+    if path_title is not None:
+        pdf_path, title = path_title
         r = requests.post(settings.PRINT_URL + '/file', json={'surname': surname, 'number': number, 'filename': title})
         if r.status_code == 200:
             pin = r.json()['pin']
@@ -113,7 +113,7 @@ def order_print(user, requisites):
             )
 
 
-def validate_proff(user):
+def register_bot_user(user):
     if len(user.message.split('\n')) == 2:
         surname = user.message.split('\n')[0].strip()
         number = user.message.split('\n')[1].strip()
@@ -155,7 +155,7 @@ def validate_proff(user):
             vk.write_msg(user, ru.val_ans['exp_name'])
 
 
-def check_proff(user):
+def check_union_member(user):
     if db.get_user(user.user_id) is not None:
         vk_id, surname, number = db.get_user(user.user_id)
         r = requests.get(settings.PRINT_URL+'/is_union_member', params=dict(surname=surname, number=number, v=1))
@@ -180,12 +180,12 @@ def message_analyzer(user):
 
         if len(user.attachments) == 0:
             if len(user.message) > 0:
-                validate_proff(user)
+                register_bot_user(user)
             else:
                 kb.main_page(user)
                 kb.auth_button(user, links=True)
         else:
-            requisites = check_proff(user)
+            requisites = check_union_member(user)
             if requisites is not None:
                 order_print(user, requisites)
 
@@ -232,12 +232,12 @@ def chat_loop():
             logging.error(err)
             traceback.print_tb(err.__traceback__)
             try:
-                logging.warning('Try to recconnect VK...')
+                logging.warning('Try to reconnect VK...')
                 vk.reconnect()
                 logging.warning('VK connected successful')
                 time.sleep(1)
             except VkApiError:
-                logging.error('Recconnect VK failed')
+                logging.error('Reconnect VK failed')
                 time.sleep(10)
 
         except psycopg2.Error as err:
@@ -245,12 +245,12 @@ def chat_loop():
             logging.error(err)
             traceback.print_tb(err.__traceback__)
             try:
-                logging.warning('Try to recconnect database...')
+                logging.warning('Try to reconnect database...')
                 db.reconnect()
                 logging.warning('Database connected successful')
                 time.sleep(1)
             except psycopg2.Error:
-                logging.error('Recconnect database failed')
+                logging.error('Reconnect database failed')
                 time.sleep(10)
 
         except Exception as err:

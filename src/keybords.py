@@ -42,7 +42,7 @@ def auth_button(user, ans=ru.kb_ans['help'], links=False):
     kb = vk.VkKeyboard(inline=True)
 
     if not check_auth(user.user_id):
-        kb.add_button(ru.kb_ans['notauth'], color='negative', payload='{"command":"auth_false"}')
+        kb.add_button(ru.kb_ans['not_auth'], color='negative', payload='{"command":"auth_false"}')
         if ru.kb_ans['help'] == ans:
             ans += ru.val_ans['val_addition']
         if links:
