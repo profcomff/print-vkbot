@@ -44,21 +44,6 @@ def re_register(**user_info):
     )
 
 
-# === Маркетинговый эксперимент: с 11.03.23 по 22.03.23
-@pass_if_exc
-def telegram_ads_click(**user_info):
-    requests.post(
-        urljoin(settings.MARKETING_URL, "v1/action"),
-        json={
-            'user_id': -2,
-            'action': 'print bot open telegram link by ads',
-            'additional_data': json.dumps(user_info),
-            'path_from': 'https://vk.com/im',
-        }
-    )
-# === конец эксперимента
-
-
 @pass_if_exc
 def register_exc_wrong(**user_info):
     requests.post(
