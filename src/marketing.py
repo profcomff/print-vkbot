@@ -1,4 +1,5 @@
 import json
+
 import requests
 
 from src.settings import Settings
@@ -14,6 +15,7 @@ def pass_if_exc(func):
         except Exception as exc:
             print("During marketing following error occurred:")
             print(exc)
+
     return wrapper
 
 
@@ -26,7 +28,7 @@ def register(**user_info):
             'action': 'print bot register',
             'additional_data': json.dumps(user_info),
             'path_from': 'https://vk.com/im',
-        }
+        },
     )
 
 
@@ -39,7 +41,7 @@ def re_register(**user_info):
             'action': 'print bot repeat register',
             'additional_data': json.dumps(user_info),
             'path_from': 'https://vk.com/im',
-        }
+        },
     )
 
 
@@ -52,7 +54,7 @@ def register_exc_wrong(**user_info):
             'action': 'print bot register exc wrong creds',
             'additional_data': json.dumps(user_info),
             'path_from': 'https://vk.com/im',
-        }
+        },
     )
 
 
@@ -65,8 +67,8 @@ def print_success(**print_info):
             'action': 'print bot sent',
             'additional_data': json.dumps(print_info),
             'path_from': 'https://vk.com/im',
-            'path_to': settings.PRINT_URL + f'/file/{print_info.get("pin")}'
-        }
+            'path_to': settings.PRINT_URL + f'/file/{print_info.get("pin")}',
+        },
     )
 
 
@@ -79,7 +81,7 @@ def print_exc_many(**print_info):
             'action': 'print bot sent exc many',
             'additional_data': json.dumps(print_info),
             'path_from': 'https://vk.com/im',
-        }
+        },
     )
 
 
@@ -92,7 +94,7 @@ def print_exc_format(**print_info):
             'action': 'print bot sent exc format',
             'additional_data': json.dumps(print_info),
             'path_from': 'https://vk.com/im',
-        }
+        },
     )
 
 
@@ -105,5 +107,5 @@ def print_exc_other(**print_info):
             'action': 'print bot sent exc other',
             'additional_data': json.dumps(print_info),
             'path_from': 'https://vk.com/im',
-        }
+        },
     )

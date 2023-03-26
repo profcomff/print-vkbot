@@ -4,6 +4,7 @@ import psycopg2
 
 from src.settings import Settings
 
+
 settings = Settings()
 
 connection = psycopg2.connect(settings.DB_DSN)
@@ -31,13 +32,12 @@ def get_user(user_id):
 def add_user(user_id, surname, number):
     with connection.cursor() as cur:
         cur.execute(
-            'INSERT INTO bot_vk_print.vk_user (vk_id,surname,number) VALUES (%s,%s,%s);',
-            (user_id, surname, number))
+            'INSERT INTO bot_vk_print.vk_user (vk_id,surname,number) VALUES (%s,%s,%s);', (user_id, surname, number)
+        )
         connection.commit()
 
 
 def update_user(user_id, surname, number):
     with connection.cursor() as cur:
-        cur.execute('UPDATE bot_vk_print.vk_user SET surname=%s,number=%s WHERE vk_id=%s;',
-                    (surname, number, user_id))
+        cur.execute('UPDATE bot_vk_print.vk_user SET surname=%s,number=%s WHERE vk_id=%s;', (surname, number, user_id))
         connection.commit()

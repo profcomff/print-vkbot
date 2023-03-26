@@ -1,20 +1,20 @@
 ﻿# Marakulin Andrey @annndruha
 # 2021
-import os
 import json
 import logging
+import os
 import time
 import traceback
 
-import requests
 import psycopg2
+import requests
 from vk_api.exceptions import VkApiError
 
 import src.answers as ru
-import src.vkontakte_functions as vk
 import src.database_functions as db
-import src.marketing as log
 import src.keybords as kb
+import src.marketing as log
+import src.vkontakte_functions as vk
 from src.settings import Settings
 
 
@@ -118,7 +118,7 @@ def register_bot_user(user):
         surname = user.message.split('\n')[0].strip()
         number = user.message.split('\n')[1].strip()
 
-        r = requests.get(settings.PRINT_URL+'/is_union_member', params=dict(surname=surname, v=1, number=number))
+        r = requests.get(settings.PRINT_URL + '/is_union_member', params=dict(surname=surname, v=1, number=number))
         data = db.get_user(user.user_id)
         if r.json() and data is None:
             db.add_user(user.user_id, surname, number)
@@ -158,7 +158,7 @@ def register_bot_user(user):
 def check_union_member(user):
     if db.get_user(user.user_id) is not None:
         vk_id, surname, number = db.get_user(user.user_id)
-        r = requests.get(settings.PRINT_URL+'/is_union_member', params=dict(surname=surname, number=number, v=1))
+        r = requests.get(settings.PRINT_URL + '/is_union_member', params=dict(surname=surname, number=number, v=1))
         if r.json():
             return vk_id, surname, number
         else:
@@ -211,8 +211,13 @@ def message_analyzer(user):
 def process_event(event):
     if event.type == vk.VkBotEventType.MESSAGE_NEW:
         vk_user = vk.user_get(event.message['from_id'])
-        user = vk.User(event.message['from_id'], event.message['text'],
-                       event.message.attachments, (vk_user[0])['first_name'], (vk_user[0])['last_name'])
+        user = vk.User(
+            event.message['from_id'],
+            event.message['text'],
+            event.message.attachments,
+            (vk_user[0])['first_name'],
+            (vk_user[0])['last_name'],
+        )
         db.check_and_reconnect()
         if event.message.payload is not None:
             kb.keyboard_browser(user, event.message.payload)
