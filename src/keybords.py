@@ -3,14 +3,13 @@
 import json
 import logging
 import traceback
-import requests
+
 import psycopg2
+import requests
 
 import src.answers as ru
-import src.vkontakte_functions as vk
 import src.database_functions as db
-
-
+import src.vkontakte_functions as vk
 from src.settings import Settings
 
 
@@ -20,7 +19,7 @@ settings = Settings()
 def check_auth(user_id):
     if db.get_user(user_id) is not None:
         _, surname, number = db.get_user(user_id)
-        r = requests.get(settings.PRINT_URL+'/is_union_member', params=dict(surname=surname, number=number, v=1))
+        r = requests.get(settings.PRINT_URL + '/is_union_member', params=dict(surname=surname, number=number, v=1))
         if r.json():
             return True
         else:

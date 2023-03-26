@@ -1,4 +1,4 @@
-from pydantic import BaseSettings, PostgresDsn, AnyUrl
+from pydantic import AnyUrl, BaseSettings, PostgresDsn
 
 
 class Settings(BaseSettings):
@@ -17,5 +17,6 @@ class Settings(BaseSettings):
 
     class Config:
         """Pydantic BaseSettings config"""
+
         case_sensitive = True
         env_file = ".env"
