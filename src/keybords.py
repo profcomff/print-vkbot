@@ -8,18 +8,19 @@ import psycopg2
 import requests
 
 import src.answers as ru
-import src.database_functions as db
+from src.db import VkUser, session, reconnect_session
 import src.vkontakte_functions as vk
 from src.settings import Settings
-
+from sqlalchemy.exc import SQLAlchemyError
 
 settings = Settings()
 
 
 def check_auth(user_id):
-    if db.get_user(user_id) is not None:
-        _, surname, number = db.get_user(user_id)
-        r = requests.get(settings.PRINT_URL + '/is_union_member', params=dict(surname=surname, number=number, v=1))
+    data: VkUser | None = session.query(VkUser).filter(VkUser.vk_id == user_id).one_or_none()
+    if data is not None:
+        r = requests.get(settings.PRINT_URL + '/is_union_member',
+                         params=dict(surname=data.surname, number=data.number, v=1))
         if r.json():
             return True
         else:
@@ -79,7 +80,10 @@ def keyboard_browser(user, str_payload):
 
     except OSError as err:
         raise err
-    except psycopg2.Error as err:
+    except (SQLAlchemyError, psycopg2.Error) as err:
+        logging.error('Database Error (longpull_loop), description:')
+        logging.error(err)
+        traceback.print_tb(err.__traceback__)
         vk.write_msg(user, ru.errors['bd_error'])
         raise err
     except json.decoder.JSONDecodeError as err:

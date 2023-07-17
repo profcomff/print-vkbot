@@ -3,7 +3,12 @@ import re
 import sqlalchemy
 from sqlalchemy.ext.declarative import as_declarative, declared_attr
 from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from src.settings import Settings
 
+
+settings = Settings()
 
 @as_declarative()
 class Base:
@@ -28,3 +33,20 @@ class VkUser(Base):
     vk_id: Mapped[int] = mapped_column(sqlalchemy.BIGINT, primary_key=True)
     surname: Mapped[int] = mapped_column(sqlalchemy.String, nullable=False)
     number: Mapped[int] = mapped_column(sqlalchemy.String, nullable=False)
+
+
+engine = create_engine(url=str(settings.DB_DSN), pool_pre_ping=True, isolation_level="AUTOCOMMIT")
+Session = sessionmaker(bind=engine)
+session = Session()
+
+
+def reconnect_session():
+    global engine
+    global Session
+    global session
+
+    session.rollback()
+    engine = create_engine(url=str(settings.DB_DSN), pool_pre_ping=True, isolation_level="AUTOCOMMIT")
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    session.rollback()

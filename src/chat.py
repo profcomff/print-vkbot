@@ -8,13 +8,16 @@ import traceback
 
 import psycopg2
 import requests
+
+from sqlalchemy.exc import SQLAlchemyError
+
 from vk_api.exceptions import VkApiError
 
 import src.answers as ru
-import src.database_functions as db
 import src.keybords as kb
 import src.marketing as log
 import src.vkontakte_functions as vk
+from src.db import VkUser, session, reconnect_session
 from src.settings import Settings
 
 
@@ -119,9 +122,10 @@ def register_bot_user(user):
         number = user.message.split('\n')[1].strip()
 
         r = requests.get(settings.PRINT_URL + '/is_union_member', params=dict(surname=surname, v=1, number=number))
-        data = db.get_user(user.user_id)
+        data: VkUser | None = session.query(VkUser).filter(VkUser.vk_id == user.user_id).one_or_none()
         if r.json() and data is None:
-            db.add_user(user.user_id, surname, number)
+            session.add(VkUser(vk_id=user.user_id, surname=surname, number=number))
+            session.commit()
             kb.auth_button(user, ru.val_ans['val_pass'])
             log.register(
                 vk_id=user.user_id,
@@ -130,7 +134,8 @@ def register_bot_user(user):
             )
             return True
         elif r.json() and data is not None:
-            db.update_user(user.user_id, surname, number)
+            data.surname = surname
+            data.number = number
             kb.auth_button(user, ru.val_ans['val_update_pass'])
             log.re_register(
                 vk_id=user.user_id,
@@ -147,7 +152,8 @@ def register_bot_user(user):
                 number=number,
             )
     else:
-        if db.get_user(user.user_id) is None:
+        data: VkUser | None = session.query(VkUser).filter(VkUser.vk_id == user.user_id).one_or_none()
+        if data is None:
             vk.write_msg(user, ru.val_ans['val_need'])
             vk.write_msg(user, ru.val_ans['exp_name'])
         else:
@@ -156,11 +162,12 @@ def register_bot_user(user):
 
 
 def check_union_member(user):
-    if db.get_user(user.user_id) is not None:
-        vk_id, surname, number = db.get_user(user.user_id)
-        r = requests.get(settings.PRINT_URL + '/is_union_member', params=dict(surname=surname, number=number, v=1))
+    data: VkUser | None = session.query(VkUser).filter(VkUser.vk_id == user.user_id).one_or_none()
+    if data is not None:
+        r = requests.get(settings.PRINT_URL + '/is_union_member',
+                         params=dict(surname=data.surname, number=data.number, v=1))
         if r.json():
-            return vk_id, surname, number
+            return user.user_id, data.surname, data.number
         else:
             vk.write_msg(user, ru.val_ans['val_need'])
             vk.write_msg(user, ru.val_ans['exp_name'])
@@ -218,7 +225,6 @@ def process_event(event):
             (vk_user[0])['first_name'],
             (vk_user[0])['last_name'],
         )
-        db.check_and_reconnect()
         if event.message.payload is not None:
             kb.keyboard_browser(user, event.message.payload)
         else:
@@ -245,21 +251,19 @@ def chat_loop():
                 logging.error('Reconnect VK failed')
                 time.sleep(10)
 
-        except psycopg2.Error as err:
+        except (SQLAlchemyError, psycopg2.Error) as err:
             logging.error('Database Error (longpull_loop), description:')
             logging.error(err)
             traceback.print_tb(err.__traceback__)
             try:
                 logging.warning('Try to reconnect database...')
-                db.reconnect()
-                logging.warning('Database connected successful')
-                time.sleep(1)
+                reconnect_session()
+                # time.sleep(5)
             except psycopg2.Error:
                 logging.error('Reconnect database failed')
-                time.sleep(10)
 
         except Exception as err:
             logging.error('BaseException (longpull_loop), description:')
             traceback.print_tb(err.__traceback__)
             logging.error(err)
-            time.sleep(5)
+            time.sleep(10)
