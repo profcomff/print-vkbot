@@ -7,12 +7,12 @@ from src.settings import Settings
 
 settings = Settings()
 
-connection = psycopg2.connect(settings.DB_DSN)
+connection = psycopg2.connect(str(settings.DB_DSN))
 
 
 def reconnect():
     global connection
-    connection = psycopg2.connect(settings.DB_DSN)
+    connection = psycopg2.connect(str(settings.DB_DSN))
 
 
 def check_and_reconnect():

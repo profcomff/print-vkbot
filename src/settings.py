@@ -7,9 +7,9 @@ class Settings(BaseSettings):
     DB_DSN: PostgresDsn
     # Environment variables
     GROUP_ID: str
-    MARKETING_URL: AnyUrl
-    PRINT_URL: AnyUrl
-    PRINT_URL_QR: AnyUrl
+    MARKETING_URL: str
+    PRINT_URL: str
+    PRINT_URL_QR: str
     MAX_PDF_SIZE_MB: float
     # Hardcode settings
     PDF_PATH: str = 'userdata'
