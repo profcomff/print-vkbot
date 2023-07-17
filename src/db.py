@@ -1,14 +1,15 @@
 import re
 
 import sqlalchemy
-from sqlalchemy.ext.declarative import as_declarative, declared_attr
-from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.declarative import as_declarative, declared_attr
+from sqlalchemy.orm import Mapped, mapped_column, sessionmaker
+
 from src.settings import Settings
 
 
 settings = Settings()
+
 
 @as_declarative()
 class Base:

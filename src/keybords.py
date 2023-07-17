@@ -6,12 +6,13 @@ import traceback
 
 import psycopg2
 import requests
+from sqlalchemy.exc import SQLAlchemyError
 
 import src.answers as ru
-from src.db import VkUser, session, reconnect_session
 import src.vkontakte_functions as vk
+from src.db import VkUser, reconnect_session, session
 from src.settings import Settings
-from sqlalchemy.exc import SQLAlchemyError
+
 
 settings = Settings()
 
@@ -19,8 +20,9 @@ settings = Settings()
 def check_auth(user_id):
     data: VkUser | None = session.query(VkUser).filter(VkUser.vk_id == user_id).one_or_none()
     if data is not None:
-        r = requests.get(settings.PRINT_URL + '/is_union_member',
-                         params=dict(surname=data.surname, number=data.number, v=1))
+        r = requests.get(
+            settings.PRINT_URL + '/is_union_member', params=dict(surname=data.surname, number=data.number, v=1)
+        )
         if r.json():
             return True
         else:

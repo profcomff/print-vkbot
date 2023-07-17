@@ -8,16 +8,14 @@ import traceback
 
 import psycopg2
 import requests
-
 from sqlalchemy.exc import SQLAlchemyError
-
 from vk_api.exceptions import VkApiError
 
 import src.answers as ru
 import src.keybords as kb
 import src.marketing as log
 import src.vkontakte_functions as vk
-from src.db import VkUser, session, reconnect_session
+from src.db import VkUser, reconnect_session, session
 from src.settings import Settings
 
 
@@ -164,8 +162,9 @@ def register_bot_user(user):
 def check_union_member(user):
     data: VkUser | None = session.query(VkUser).filter(VkUser.vk_id == user.user_id).one_or_none()
     if data is not None:
-        r = requests.get(settings.PRINT_URL + '/is_union_member',
-                         params=dict(surname=data.surname, number=data.number, v=1))
+        r = requests.get(
+            settings.PRINT_URL + '/is_union_member', params=dict(surname=data.surname, number=data.number, v=1)
+        )
         if r.json():
             return user.user_id, data.surname, data.number
         else:
