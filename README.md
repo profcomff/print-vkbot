@@ -1,14 +1,12 @@
-# Print-bot
+# print-vkbot
 
-## ВКонтакте бот для отправки файлов на печать на принтер
+Бот ВКонтакте отправки заданий на печать бесплатного принтера профкома студентов физического факультета МГУ
 
-Продовый бот: http://vk.me/profcomff_print_bot
 
-Тестовый бот: https://vk.com/profcomff_print_test_bot
+* [Продовый vk-бот](https://vk.me/profcomff_print_bot)
+* [Тестовый vk-бот](https://vk.me/profcomff_print_test_bot)
 
-## Ключевые особенности
 
-* Возможность отправлять файлы pdf на сервер печати
-* Возможность проверки пользователя
-* Валидация принимаемых типов сообщений
-* Красивые клавиатуры
+Другое:
+* [Печать через сайт](https://www.profcomff.com/work/obshkom/print)
+* [Telegram-Бот](https://t.me/profcomff_print_bot)

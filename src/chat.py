@@ -13,7 +13,7 @@ from vk_api.exceptions import VkApiError
 
 import src.answers as ru
 import src.keybords as kb
-import src.marketing as log
+import src.marketing as marketing
 import src.vkontakte_functions as vk
 from src.db import VkUser, reconnect_session, session
 from src.settings import Settings
@@ -25,14 +25,14 @@ settings = Settings()
 def get_attachments(user):
     if len(user.attachments) > 1:
         vk.write_msg(user, ru.print_ans['many_files'])
-        log.print_exc_many(
+        marketing.print_exc_many(
             file_count=len(user.attachments),
             vk_id=user.user_id,
         )
         return
     if user.attachments[0]['type'] != 'doc':
         vk.write_msg(user, ru.print_ans['only_pdfs'])
-        log.print_exc_format(
+        marketing.print_exc_format(
             file_ext='image',
             vk_id=user.user_id,
         )
@@ -41,7 +41,7 @@ def get_attachments(user):
         ext = user.attachments[0]['doc']['ext']
         if ext != 'pdf':
             vk.write_msg(user, ru.print_ans['only_pdfs'])
-            log.print_exc_format(
+            marketing.print_exc_format(
                 file_ext=len(user.attachments[0]['doc']['ext']),
                 vk_id=user.user_id,
             )
@@ -76,7 +76,7 @@ def order_print(user, requisites):
                 kb_qr = vk.VkKeyboard(inline=True)
                 kb_qr.add_openlink_button(ru.print_ans['qr_button_text'], link=settings.PRINT_URL_QR + str(pin))
                 vk.send_keyboard(user, kb_qr.get_keyboard(), ru.print_ans['send_to_print'].format(pin))
-                log.print_success(
+                marketing.print_success(
                     vk_id=vk_id,
                     surname=surname,
                     number=number,
@@ -84,7 +84,7 @@ def order_print(user, requisites):
                 )
             elif rfile.status_code == 413:
                 vk.write_msg(user, ru.errors['file_size_err'])
-                log.print_exc_other(
+                marketing.print_exc_other(
                     vk_id=vk_id,
                     surname=surname,
                     number=number,
@@ -94,7 +94,7 @@ def order_print(user, requisites):
                 )
             else:
                 vk.write_msg(user, ru.errors['print_err'])
-                log.print_exc_other(
+                marketing.print_exc_other(
                     vk_id=vk_id,
                     surname=surname,
                     number=number,
@@ -104,7 +104,7 @@ def order_print(user, requisites):
                 )
         else:
             vk.write_msg(user, ru.errors['print_err'])
-            log.print_exc_other(
+            marketing.print_exc_other(
                 vk_id=vk_id,
                 surname=surname,
                 number=number,
@@ -125,7 +125,7 @@ def register_bot_user(user):
             session.add(VkUser(vk_id=user.user_id, surname=surname, number=number))
             session.commit()
             kb.auth_button(user, ru.val_ans['val_pass'])
-            log.register(
+            marketing.register(
                 vk_id=user.user_id,
                 surname=surname,
                 number=number,
@@ -135,7 +135,7 @@ def register_bot_user(user):
             data.surname = surname
             data.number = number
             kb.auth_button(user, ru.val_ans['val_update_pass'])
-            log.re_register(
+            marketing.re_register(
                 vk_id=user.user_id,
                 surname=surname,
                 number=number,
@@ -144,7 +144,7 @@ def register_bot_user(user):
         elif r.json() is False:
             vk.write_msg(user, ru.val_ans['val_fail'])
             vk.write_msg(user, ru.val_ans['exp_name'])
-            log.register_exc_wrong(
+            marketing.register_exc_wrong(
                 vk_id=user.user_id,
                 surname=surname,
                 number=number,
