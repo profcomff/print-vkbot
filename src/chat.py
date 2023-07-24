@@ -144,8 +144,9 @@ def order_print(user: vk.EventUser, db_requisites):
     # If get pin error
     if r.status_code != 200:
         vk.send(user, ans.err_print)
-        marketing.print_exc_other(vk_id=vk_id, surname=surname, number=number,
-                                  status_code=r.status_code, description='Fail on fetching code')
+        marketing.print_exc_other(
+            vk_id=vk_id, surname=surname, number=number, status_code=r.status_code, description='Fail on fetching code'
+        )
         return
 
     # Upload file with pin
@@ -159,9 +160,21 @@ def order_print(user: vk.EventUser, db_requisites):
         marketing.print_success(vk_id=vk_id, surname=surname, number=number, pin=pin)
     elif r.status_code == 413:
         vk.send(user, ans.warn_filesize)
-        marketing.print_exc_other(vk_id=vk_id, surname=surname, number=number, pin=pin,
-                                  status_code=r.status_code, description='File is too big')
+        marketing.print_exc_other(
+            vk_id=vk_id,
+            surname=surname,
+            number=number,
+            pin=pin,
+            status_code=r.status_code,
+            description='File is too big',
+        )
     else:
         vk.send(user, ans.err_print)
-        marketing.print_exc_other(vk_id=vk_id, surname=surname, number=number, pin=pin,
-                                  status_code=r.status_code, description='Fail on file upload')
+        marketing.print_exc_other(
+            vk_id=vk_id,
+            surname=surname,
+            number=number,
+            pin=pin,
+            status_code=r.status_code,
+            description='Fail on file upload',
+        )

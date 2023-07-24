@@ -9,8 +9,7 @@ from src.settings import settings
 
 
 def check_union_member(user: vk.EventUser, surname, number) -> None | tuple:
-    r = requests.get(url=settings.PRINT_URL + '/is_union_member',
-                     params=dict(surname=surname, number=number, v=1))
+    r = requests.get(url=settings.PRINT_URL + '/is_union_member', params=dict(surname=surname, number=number, v=1))
     if r.json():
         return user.user_id, surname, number
     return None
@@ -23,8 +22,9 @@ def check(user: vk.EventUser) -> None | tuple:
     """
     data: VkUser | None = session.query(VkUser).filter(VkUser.vk_id == user.user_id).one_or_none()
     if data is not None:
-        r = requests.get(url=settings.PRINT_URL + '/is_union_member',
-                         params=dict(surname=data.surname, number=data.number, v=1))
+        r = requests.get(
+            url=settings.PRINT_URL + '/is_union_member', params=dict(surname=data.surname, number=data.number, v=1)
+        )
         if r.json():
             return user.user_id, data.surname, data.number
     return None
