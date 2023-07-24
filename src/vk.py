@@ -38,6 +38,8 @@ class EventUser:
 
 
 def send(user: EventUser, message: str, keyboard: VkKeyboard | None = None):
+    if user is None:
+        return
     values = {'user_id': user.user_id,
               'message': message,
               'dont_parse_links': 1,

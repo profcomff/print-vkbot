@@ -23,55 +23,36 @@ settings = Settings()
 ans = Answers()
 
 
-def error_handler(func):
-    def wrapper(*args, **kwargs):
-        try:
-            vk.reconnect()
-            reconnect_session()
-            func(*args, **kwargs)
-        except OSError as err:
-            logging.error('OSError (longpull_loop), description:')
-            logging.error(err)
-            traceback.print_tb(err.__traceback__)
-            try:
-                logging.warning('Try to reconnect VK...')
-                vk.reconnect()
-                logging.warning('VK connected successful')
-            except VkApiError:
-                logging.error('Reconnect VK failed')
-
-        except (SQLAlchemyError, psycopg2.Error) as err:
-            logging.error('Database Error (longpull_loop), description:')
-            logging.error(err)
-            traceback.print_tb(err.__traceback__)
-            try:
-                logging.warning('Try to reconnect database...')
-
-            except psycopg2.Error:
-                logging.error('Reconnect database failed')
-        except json.decoder.JSONDecodeError as err:
-            # vk.send(user, ans.print_err)
-            logging.error('JSONDecodeError (message_analyzer), description:')
-            traceback.print_tb(err.__traceback__)
-            logging.error(err)
-        except Exception as err:
-            logging.error('BaseException (longpull_loop), description:')
-            traceback.print_tb(err.__traceback__)
-            logging.error(err)
-    return wrapper
-
-
-@error_handler
 def event_loop():
-    for event in vk.longpoll.listen():
-        if event.type != vk.VkBotEventType.MESSAGE_NEW:
-            return
-
-        user = vk.EventUser(event)
-        if event.message.payload is not None:
-            kb.keyboard_browser(user, event.message.payload)
-        else:
-            message_analyzer(user)
+    user = None
+    try:
+        vk.reconnect()
+        reconnect_session()
+        for event in vk.longpoll.listen():
+            if event.type != vk.VkBotEventType.MESSAGE_NEW:
+                return
+    
+            user = vk.EventUser(event)
+            if event.message.payload is not None:
+                kb.keyboard_browser(user, event.message.payload)
+            else:
+                message_analyzer(user)
+    except (OSError, VkApiError) as err:
+        vk.send(user, ans.err_vk)
+        logging.error(err)
+        traceback.print_tb(err.__traceback__)
+    except (SQLAlchemyError, psycopg2.Error) as err:
+        vk.send(user, ans.err_bd)
+        logging.error(err)
+        traceback.print_tb(err.__traceback__)
+    except json.decoder.JSONDecodeError as err:
+        vk.send(user, ans.err_kb)
+        logging.error(err)
+        traceback.print_tb(err.__traceback__)
+    except Exception as err:
+        vk.send(user, ans.err_fatal)
+        logging.error(err)
+        traceback.print_tb(err.__traceback__)
 
 
 def message_analyzer(user: vk.EventUser):
@@ -83,11 +64,10 @@ def message_analyzer(user: vk.EventUser):
                 return
         register_bot_user(user)
         return
-
     requisites = check_auth(user)
     if requisites is None:
         vk.send(user, ans.val_need)
-        vk.send(user, ans.exp_name)
+        vk.send(user, ans.val_name)
         return
 
     order_print(user, requisites)
@@ -95,14 +75,14 @@ def message_analyzer(user: vk.EventUser):
 
 def get_attachments(user: vk.EventUser):
     if len(user.attachments) > 1:
-        vk.send(user, ans.many_files)
+        vk.send(user, ans.warn_many_files)
         marketing.print_exc_many(
             file_count=len(user.attachments),
             vk_id=user.user_id,
         )
         return
     if user.attachments[0]['type'] != 'doc':
-        vk.send(user, ans.only_pdfs)
+        vk.send(user, ans.warn_only_pdfs)
         marketing.print_exc_format(
             file_ext='image',
             vk_id=user.user_id,
@@ -111,7 +91,7 @@ def get_attachments(user: vk.EventUser):
     if user.attachments[0]['type'] == 'doc':
         ext = user.attachments[0]['doc']['ext']
         if ext not in ['pdf', 'PDF']:
-            vk.send(user, ans.only_pdfs)
+            vk.send(user, ans.warn_only_pdfs)
             marketing.print_exc_format(
                 file_ext=len(user.attachments[0]['doc']['ext']),
                 vk_id=user.user_id,
@@ -156,7 +136,7 @@ def order_print(user: vk.EventUser, requisites):
                     pin=pin,
                 )
             elif rfile.status_code == 413:
-                vk.send(user, ans.file_size_err)
+                vk.send(user, ans.warn_filesize)
                 marketing.print_exc_other(
                     vk_id=vk_id,
                     surname=surname,
@@ -166,7 +146,7 @@ def order_print(user: vk.EventUser, requisites):
                     description='File is too big',
                 )
             else:
-                vk.send(user, ans.print_err)
+                vk.send(user, ans.err_print)
                 marketing.print_exc_other(
                     vk_id=vk_id,
                     surname=surname,
@@ -176,7 +156,7 @@ def order_print(user: vk.EventUser, requisites):
                     description='Fail on file upload',
                 )
         else:
-            vk.send(user, ans.print_err)
+            vk.send(user, ans.err_print)
             marketing.print_exc_other(
                 vk_id=vk_id,
                 surname=surname,
@@ -217,7 +197,7 @@ def register_bot_user(user: vk.EventUser):
             return True
         elif r.json() is False:
             vk.send(user, ans.val_fail)
-            vk.send(user, ans.exp_name)
+            vk.send(user, ans.val_name)
             marketing.register_exc_wrong(
                 vk_id=user.user_id,
                 surname=surname,
@@ -228,7 +208,7 @@ def register_bot_user(user: vk.EventUser):
         data: VkUser | None = session.query(VkUser).filter(VkUser.vk_id == user.user_id).one_or_none()
         if data is None:
             vk.send(user, ans.val_need)
-            vk.send(user, ans.exp_name)
+            vk.send(user, ans.val_name)
         else:
             vk.send(user, ans.val_update_fail)
-            vk.send(user, ans.exp_name)
+            vk.send(user, ans.val_name)

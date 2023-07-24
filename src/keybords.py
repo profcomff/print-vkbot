@@ -1,16 +1,12 @@
 # Marakulin Andrey @annndruha
-# 2021
+# 2023
 
 import json
-import requests
 
 import src.vk as vk
-from src.settings import Settings
 from src.answers import Answers
 from src.auth import check_auth
 
-
-settings = Settings()
 ans = Answers()
 
 
@@ -51,6 +47,6 @@ def keyboard_browser(user: vk.EventUser, payload: str):
                 vk.send(user, ans.val_already)
                 return
             vk.send(user, ans.val_need)
-            vk.send(user, ans.exp_name)
+            vk.send(user, ans.val_name)
         case _:
             vk.send(user, ans.err_payload)
