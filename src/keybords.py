@@ -24,17 +24,17 @@ def check_auth(user_id):
     if data is not None:
         r = requests.get(url=settings.PRINT_URL + '/is_union_member',
                          params=dict(surname=data.surname, number=data.number, v=1))
-        if r.json():  # TODO: Is correct?
+        if r.json():  # TODO: Is it correct?
             return True
     return False
 
 
-def main_page(user, msg=ans.hey, attach=None):
+def main_page(user, msg=ans.hey):
     kb = vk.VkKeyboard(one_time=False)
     kb.add_button(ans.inst, color='primary', payload='{"command":"help"}')
     kb.add_line()
     kb.add_button(ans.conf, color='primary', payload='{"command":"conf"}')
-    vk.send_keyboard(user, kb.get_keyboard(), msg, attach=attach)
+    vk.send(user, msg, keyboard=kb.get_keyboard())
 
 
 def auth_button(user, msg=ans.help, links=False):
@@ -52,9 +52,9 @@ def auth_button(user, msg=ans.help, links=False):
         kb.add_openlink_button('Telegram-бот', link='https://t.me/profcomff_print_bot')
 
     if len(kb.lines[0]) == 0:
-        vk.write_msg(user, msg)
+        vk.send(user, msg)
     else:
-        vk.send_keyboard(user, kb.get_keyboard(), msg)
+        vk.send(user, msg, keyboard=kb.get_keyboard())
 
 
 def keyboard_browser(user, str_payload):
@@ -69,10 +69,10 @@ def keyboard_browser(user, str_payload):
             main_page(user, ans.conf_full)
         case 'auth_false':
             if check_auth(user.user_id):  # Prevent to tap on old button
-                vk.write_msg(user, ans.val_already)
+                vk.send(user, ans.val_already)
                 return
-            vk.write_msg(user, ans.val_need)
-            vk.write_msg(user, ans.exp_name)
+            vk.send(user, ans.val_need)
+            vk.send(user, ans.exp_name)
         case _:
             main_page(user)
-            vk.write_msg(user, 'Похоже бот обновился.\nВыполните команду /start')
+            vk.send(user, 'Похоже бот обновился.\nВыполните команду /start')
