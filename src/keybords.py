@@ -5,9 +5,17 @@ import json
 
 import src.vk as vk
 from src.answers import Answers
+from settings import Settings
 import src.auth as auth
 
 ans = Answers()
+settings = Settings()
+
+
+def file_settings(pin):
+    kb = vk.VkKeyboard(inline=True)
+    kb.add_openlink_button(ans.qr_button_text, link=settings.PRINT_URL_QR + str(pin))
+    return kb.get_keyboard()
 
 
 def main_page(user):
