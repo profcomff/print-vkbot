@@ -18,7 +18,7 @@ def check_union_member(user: vk.EventUser, surname, number) -> None | tuple:
     return None
 
 
-def check_auth(user: vk.EventUser) -> None | tuple:
+def check(user: vk.EventUser) -> None | tuple:
     """
     :param user: Object of vk.EventUser
     :return: db_requisites tuple or None if user not authenticated

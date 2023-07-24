@@ -14,8 +14,8 @@ from vk_api.exceptions import VkApiError
 import src.keybords as kb
 import src.marketing as marketing
 import src.vk as vk
-from src.auth import check_auth, check_union_member, add_user, update_user
-from src.db import VkUser, reconnect_session, session
+import src.auth as auth
+from src.db import reconnect_session
 from src.settings import Settings
 from src.answers import Answers
 
@@ -31,7 +31,7 @@ def event_loop():
         for event in vk.longpoll.listen():
             if event.type != vk.VkBotEventType.MESSAGE_NEW:
                 return
-    
+
             user = vk.EventUser(event)
             if event.message.payload is not None:
                 kb.keyboard_browser(user, event.message.payload)
@@ -56,7 +56,7 @@ def event_loop():
 
 
 def message_analyzer(user: vk.EventUser):
-    db_requisites = check_auth(user)
+    db_requisites = auth.check(user)
     # Если юзер прислал файл, проверим авторизацию
     if len(user.attachments) > 0:
         if db_requisites is None:
@@ -83,13 +83,10 @@ def message_analyzer(user: vk.EventUser):
     # Если юзер прислал текст, который похож на обновление данных авторизации
     if len(user.message.split('\n')) == 2:
         register_bot_user(user, db_requisites)
-        return 
-    # Если вообще непонятно что за сообщение пришло
+        return
+        # Если вообще непонятно что за сообщение пришло
     vk.send(user, ans.val_unknown_message)
     vk.send(user, ans.val_name)
-
-
-
 
 
 def get_attachments(user: vk.EventUser):
@@ -189,9 +186,8 @@ def order_print(user: vk.EventUser, db_requisites):
 def register_bot_user(user: vk.EventUser, db_requisites):
     surname = user.message.split('\n')[0].strip()
     number = user.message.split('\n')[1].strip()
-    
-    union_member = check_union_member(user, surname, number)
 
+    union_member = auth.check_union_member(user, surname, number)
     # Если юзер не состоит в профсоюзе
     if union_member is None:
         vk.send(user, ans.val_fail)
@@ -205,7 +201,7 @@ def register_bot_user(user: vk.EventUser, db_requisites):
 
     # Писать разные сообщения на первичное добавление в базу и на обновление данных
     if db_requisites is None:
-        add_user(user, surname, number)
+        auth.add_user(user, surname, number)
         vk.send(user, ans.val_pass)
         marketing.register(
             vk_id=user.user_id,
@@ -213,11 +209,10 @@ def register_bot_user(user: vk.EventUser, db_requisites):
             number=number,
         )
     else:
-        update_user(user, surname, number)
+        auth.update_user(user, surname, number)
         vk.send(user, ans.val_update_pass)
         marketing.re_register(
             vk_id=user.user_id,
             surname=surname,
             number=number,
         )
-
