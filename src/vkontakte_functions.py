@@ -19,12 +19,14 @@ VkBotEventType = VkBotEventType
 
 
 class User:
-    def __init__(self, user_id, message, attachments, first_name, last_name):
-        self.user_id = user_id
-        self.message = message
-        self.first_name = first_name
-        self.last_name = last_name
-        self.attachments = attachments
+    def __init__(self, event):
+        self.user_id = event.message['from_id']
+        self.message = event.message['text']
+        self.attachments = event.message.attachments
+
+        r = vk.method('users.get', {'user_ids': self.user_id})
+        self.first_name = r[0]['first_name']
+        self.last_name = r[0]['last_name']
 
 
 def reconnect():
@@ -32,10 +34,6 @@ def reconnect():
     global longpoll
     vk = VkApi(token=settings.BOT_TOKEN, api_version=settings.API_VERSION)
     longpoll = VkBotLongPoll(vk, group_id=settings.GROUP_ID)
-
-
-def user_get(user_id):
-    return vk.method('users.get', {'user_ids': user_id})
 
 
 def write_msg(user, message=None, attach=None, parse_links=False):

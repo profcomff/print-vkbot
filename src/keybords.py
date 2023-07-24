@@ -22,20 +22,15 @@ ans = Answers()
 def check_auth(user_id):
     data: VkUser | None = session.query(VkUser).filter(VkUser.vk_id == user_id).one_or_none()
     if data is not None:
-        r = requests.get(
-            settings.PRINT_URL + '/is_union_member', params=dict(surname=data.surname, number=data.number, v=1)
-        )
-        if r.json():
+        r = requests.get(url=settings.PRINT_URL + '/is_union_member',
+                         params=dict(surname=data.surname, number=data.number, v=1))
+        if r.json():  # TODO: Is correct?
             return True
-        else:
-            return False
-    else:
-        return False
+    return False
 
 
 def main_page(user, msg=ans.hey, attach=None):
     kb = vk.VkKeyboard(one_time=False)
-
     kb.add_button(ans.inst, color='primary', payload='{"command":"help"}')
     kb.add_line()
     kb.add_button(ans.conf, color='primary', payload='{"command":"conf"}')
@@ -63,40 +58,21 @@ def auth_button(user, msg=ans.help, links=False):
 
 
 def keyboard_browser(user, str_payload):
-    try:
-        payload = json.loads(str_payload)  # From str to dict
-        if payload['command'] == 'start':
+    match json.loads(str_payload)['command']:
+        case 'start':
             main_page(user)
             auth_button(user, links=True)
-        elif payload['command'] == 'help':
+        case 'help':
             main_page(user)
             auth_button(user, links=True)
-        elif payload['command'] == 'conf':
+        case 'conf':
             main_page(user, ans.conf_full)
-        elif payload['command'] == 'auth_false':
-            if check_auth(user.user_id):
+        case 'auth_false':
+            if check_auth(user.user_id):  # Prevent to tap on old button
                 vk.write_msg(user, ans.val_already)
-            else:
-                vk.write_msg(user, ans.val_need)
-                vk.write_msg(user, ans.exp_name)
-        else:
+                return
+            vk.write_msg(user, ans.val_need)
+            vk.write_msg(user, ans.exp_name)
+        case _:
+            main_page(user)
             vk.write_msg(user, 'Похоже бот обновился.\nВыполните команду /start')
-
-    except OSError as err:
-        raise err
-    except (SQLAlchemyError, psycopg2.Error) as err:
-        logging.error('Database Error (longpull_loop), description:')
-        logging.error(err)
-        traceback.print_tb(err.__traceback__)
-        vk.write_msg(user, ans.bd_error)
-        raise err
-    except json.decoder.JSONDecodeError as err:
-        vk.write_msg(user, ans.print_err)
-        logging.error('JSONDecodeError (message_analyzer), description:')
-        traceback.print_tb(err.__traceback__)
-        logging.error(err)
-    except Exception as err:
-        vk.write_msg(user, ans.kb_error)
-        logging.error(f'Unknown Exception (keyboard_browser), description:')
-        logging.error(err)
-        traceback.print_tb(err.__traceback__)

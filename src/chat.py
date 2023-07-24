@@ -3,7 +3,6 @@
 import json
 import logging
 import os
-import time
 import traceback
 
 import psycopg2
@@ -21,6 +20,57 @@ from src.settings import Settings
 
 settings = Settings()
 ans = Answers()
+
+
+def error_handler(func):
+    def wrapper(*args, **kwargs):
+        try:
+            vk.reconnect()
+            reconnect_session()
+            func(*args, **kwargs)
+        except OSError as err:
+            logging.error('OSError (longpull_loop), description:')
+            logging.error(err)
+            traceback.print_tb(err.__traceback__)
+            try:
+                logging.warning('Try to reconnect VK...')
+                vk.reconnect()
+                logging.warning('VK connected successful')
+            except VkApiError:
+                logging.error('Reconnect VK failed')
+
+        except (SQLAlchemyError, psycopg2.Error) as err:
+            logging.error('Database Error (longpull_loop), description:')
+            logging.error(err)
+            traceback.print_tb(err.__traceback__)
+            try:
+                logging.warning('Try to reconnect database...')
+
+            except psycopg2.Error:
+                logging.error('Reconnect database failed')
+        except json.decoder.JSONDecodeError as err:
+            # vk.write_msg(user, ans.print_err)
+            logging.error('JSONDecodeError (message_analyzer), description:')
+            traceback.print_tb(err.__traceback__)
+            logging.error(err)
+        except Exception as err:
+            logging.error('BaseException (longpull_loop), description:')
+            traceback.print_tb(err.__traceback__)
+            logging.error(err)
+    return wrapper
+
+
+@error_handler
+def event_loop():
+    for event in vk.longpoll.listen():
+        if event.type != vk.VkBotEventType.MESSAGE_NEW:
+            return
+
+        user = vk.User(event)
+        if event.message.payload is not None:
+            kb.keyboard_browser(user, event.message.payload)
+        else:
+            message_analyzer(user)
 
 
 def get_attachments(user):
@@ -177,92 +227,20 @@ def check_union_member(user):
 
 
 def message_analyzer(user):
-    try:
-        if len(user.message) > 0:
-            for word in ans.ask_help:
-                if word in user.message.lower():
-                    kb.main_page(user)
-                    kb.auth_button(user, links=True)
-                    return
-
-        if len(user.attachments) == 0:
-            if len(user.message) > 0:
-                register_bot_user(user)
-            else:
+    if len(user.message) > 0:
+        for word in ans.ask_help:
+            if word in user.message.lower():
                 kb.main_page(user)
                 kb.auth_button(user, links=True)
+                return
+
+    if len(user.attachments) == 0:
+        if len(user.message) > 0:
+            register_bot_user(user)
         else:
-            requisites = check_union_member(user)
-            if requisites is not None:
-                order_print(user, requisites)
-
-    except OSError as err:
-        raise err
-    except psycopg2.Error as err:
-        vk.write_msg(user, ans.bd_error)
-        raise err
-    except json.decoder.JSONDecodeError as err:
-        vk.write_msg(user, ans.print_err)
-        logging.error('JSONDecodeError (message_analyzer), description:')
-        logging.error(err)
-        traceback.print_tb(err.__traceback__)
-        time.sleep(1)
-    except Exception as err:
-        vk.write_msg(user, ans.im_broken)
-        logging.error('Unknown Exception (message_analyzer), description:')
-        logging.error(err)
-        traceback.print_tb(err.__traceback__)
-
-
-def process_event(event):
-    if event.type == vk.VkBotEventType.MESSAGE_NEW:
-        vk_user = vk.user_get(event.message['from_id'])
-        user = vk.User(
-            event.message['from_id'],
-            event.message['text'],
-            event.message.attachments,
-            (vk_user[0])['first_name'],
-            (vk_user[0])['last_name'],
-        )
-        if event.message.payload is not None:
-            kb.keyboard_browser(user, event.message.payload)
-        else:
-            message_analyzer(user)
-
-
-def chat_loop():
-    while True:
-        try:
-            vk.reconnect()
-            for event in vk.longpoll.listen():
-                process_event(event)
-
-        except OSError as err:
-            logging.error('OSError (longpull_loop), description:')
-            logging.error(err)
-            traceback.print_tb(err.__traceback__)
-            try:
-                logging.warning('Try to reconnect VK...')
-                vk.reconnect()
-                logging.warning('VK connected successful')
-                time.sleep(1)
-            except VkApiError:
-                logging.error('Reconnect VK failed')
-                time.sleep(10)
-
-        except (SQLAlchemyError, psycopg2.Error) as err:
-            logging.error('Database Error (longpull_loop), description:')
-            logging.error(err)
-            traceback.print_tb(err.__traceback__)
-            try:
-                logging.warning('Try to reconnect database...')
-                reconnect_session()
-                # time.sleep(5)
-            except psycopg2.Error:
-                logging.error('Reconnect database failed')
-
-        except Exception as err:
-            logging.error('BaseException (longpull_loop), description:')
-            traceback.print_tb(err.__traceback__)
-            logging.error(err)
-            time.sleep(10)
+            kb.main_page(user)
+            kb.auth_button(user, links=True)
+    else:
+        requisites = check_union_member(user)
+        if requisites is not None:
+            order_print(user, requisites)
