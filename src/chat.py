@@ -73,6 +73,24 @@ def event_loop():
             message_analyzer(user)
 
 
+def message_analyzer(user):
+    if len(user.message) > 0:
+        for word in ans.ask_help:
+            if word in user.message.lower():
+                kb.main_page(user)
+                return
+
+    if len(user.attachments) == 0:
+        if len(user.message) > 0:
+            register_bot_user(user)
+        else:
+            kb.main_page(user)
+    else:
+        requisites = check_union_member(user)
+        if requisites is not None:
+            order_print(user, requisites)
+
+
 def get_attachments(user):
     if len(user.attachments) > 1:
         vk.send(user, ans.many_files)
@@ -175,7 +193,7 @@ def register_bot_user(user):
         if r.json() and data is None:
             session.add(VkUser(vk_id=user.user_id, surname=surname, number=number))
             session.commit()
-            kb.auth_button(user, ans.val_pass)
+            vk.send(user, ans.val_pass)
             marketing.register(
                 vk_id=user.user_id,
                 surname=surname,
@@ -185,7 +203,7 @@ def register_bot_user(user):
         elif r.json() and data is not None:
             data.surname = surname
             data.number = number
-            kb.auth_button(user, ans.val_update_pass)
+            vk.send(user, ans.val_update_pass)
             marketing.re_register(
                 vk_id=user.user_id,
                 surname=surname,
@@ -224,23 +242,3 @@ def check_union_member(user):
     else:
         vk.send(user, ans.val_need)
         vk.send(user, ans.exp_name)
-
-
-def message_analyzer(user):
-    if len(user.message) > 0:
-        for word in ans.ask_help:
-            if word in user.message.lower():
-                kb.main_page(user)
-                kb.auth_button(user, links=True)
-                return
-
-    if len(user.attachments) == 0:
-        if len(user.message) > 0:
-            register_bot_user(user)
-        else:
-            kb.main_page(user)
-            kb.auth_button(user, links=True)
-    else:
-        requisites = check_union_member(user)
-        if requisites is not None:
-            order_print(user, requisites)
