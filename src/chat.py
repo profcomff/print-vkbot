@@ -28,26 +28,25 @@ def event_loop():
         for event in vk.longpoll.listen():
             if event.type != VkBotEventType.MESSAGE_NEW:
                 return
-
             user = vk.EventUser(event)
             if event.message.payload is not None:
                 kb.keyboard_browser(user, event.message.payload)
             else:
                 message_analyzer(user)
     except (OSError, VkApiError) as err:
-        vk.send(user, ans.err_vk)
+        vk.send(user, ans.err_vk, keyboard=kb.links_keyboard())
         logging.error(err)
         traceback.print_tb(err.__traceback__)
     except (SQLAlchemyError, psycopg2.Error) as err:
-        vk.send(user, ans.err_bd)
+        vk.send(user, ans.err_bd, keyboard=kb.links_keyboard())
         logging.error(err)
         traceback.print_tb(err.__traceback__)
     except json.decoder.JSONDecodeError as err:
-        vk.send(user, ans.err_kb)
+        vk.send(user, ans.err_kb, keyboard=kb.links_keyboard())
         logging.error(err)
         traceback.print_tb(err.__traceback__)
     except Exception as err:
-        vk.send(user, ans.err_fatal)
+        vk.send(user, ans.err_fatal, keyboard=kb.links_keyboard())
         logging.error(err)
         traceback.print_tb(err.__traceback__)
 
