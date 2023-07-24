@@ -88,20 +88,43 @@ def message_analyzer(user: vk.EventUser):
     vk.send(user, ans.val_name)
 
 
+def register_bot_user(user: vk.EventUser, db_requisites):
+    surname = user.message.split('\n')[0].strip()
+    number = user.message.split('\n')[1].strip()
+
+    union_member = auth.check_union_member(user, surname, number)
+    # Если юзер не состоит в профсоюзе
+    if union_member is None:
+        vk.send(user, ans.val_fail)
+        vk.send(user, ans.val_name)
+        marketing.register_exc_wrong(vk_id=user.user_id, surname=surname, number=number)
+        return
+
+    # Писать разные сообщения на первичное добавление в базу и на обновление данных
+    if db_requisites is None:
+        auth.add_user(user, surname, number)
+        vk.send(user, ans.val_pass)
+        marketing.register(vk_id=user.user_id, surname=surname, number=number)
+    else:
+        auth.update_user(user, surname, number)
+        vk.send(user, ans.val_update_pass)
+        marketing.re_register(vk_id=user.user_id, surname=surname, number=number)
+
+
 def get_attachments(user: vk.EventUser):
     if len(user.attachments) > 1:
         vk.send(user, ans.warn_many_files)
-        marketing.print_exc_many(file_count=len(user.attachments), vk_id=user.user_id, )
+        marketing.print_exc_many(file_count=len(user.attachments), vk_id=user.user_id)
         return
 
     if user.attachments[0]['type'] != 'doc':
         vk.send(user, ans.warn_only_pdfs)
-        marketing.print_exc_format(file_ext='image', vk_id=user.user_id, )
+        marketing.print_exc_format(file_ext='image', vk_id=user.user_id)
         return
 
     if user.attachments[0]['doc']['ext'] not in ['pdf', 'PDF']:
         vk.send(user, ans.warn_only_pdfs)
-        marketing.print_exc_format(file_ext=len(user.attachments[0]['doc']['ext']), vk_id=user.user_id, )
+        marketing.print_exc_format(file_ext=len(user.attachments[0]['doc']['ext']), vk_id=user.user_id)
         return
 
     title = user.attachments[0]['doc']['title']
@@ -140,31 +163,8 @@ def order_print(user: vk.EventUser, db_requisites):
     elif r.status_code == 413:
         vk.send(user, ans.warn_filesize)
         marketing.print_exc_other(vk_id=vk_id, surname=surname, number=number, pin=pin,
-                                  status_code=r.status_code, description='File is too big',)
+                                  status_code=r.status_code, description='File is too big')
     else:
         vk.send(user, ans.err_print)
         marketing.print_exc_other(vk_id=vk_id, surname=surname, number=number, pin=pin,
-                                  status_code=r.status_code, description='Fail on file upload',)
-
-
-def register_bot_user(user: vk.EventUser, db_requisites):
-    surname = user.message.split('\n')[0].strip()
-    number = user.message.split('\n')[1].strip()
-
-    union_member = auth.check_union_member(user, surname, number)
-    # Если юзер не состоит в профсоюзе
-    if union_member is None:
-        vk.send(user, ans.val_fail)
-        vk.send(user, ans.val_name)
-        marketing.register_exc_wrong(vk_id=user.user_id, surname=surname, number=number)
-        return
-
-    # Писать разные сообщения на первичное добавление в базу и на обновление данных
-    if db_requisites is None:
-        auth.add_user(user, surname, number)
-        vk.send(user, ans.val_pass)
-        marketing.register(vk_id=user.user_id, surname=surname, number=number)
-    else:
-        auth.update_user(user, surname, number)
-        vk.send(user, ans.val_update_pass)
-        marketing.re_register(vk_id=user.user_id, surname=surname, number=number)
+                                  status_code=r.status_code, description='Fail on file upload')
