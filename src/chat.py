@@ -14,7 +14,7 @@ from vk_api.exceptions import VkApiError
 import src.keybords as kb
 import src.marketing as marketing
 import src.vk as vk
-from src.auth import check_auth
+from src.auth import check_auth, check_union_member, add_user, update_user
 from src.db import VkUser, reconnect_session, session
 from src.settings import Settings
 from src.answers import Answers
@@ -56,21 +56,40 @@ def event_loop():
 
 
 def message_analyzer(user: vk.EventUser):
-    # Define type of message: help, update requisites, file
-    if len(user.message) > 0 and len(user.attachments) == 0:
+    db_requisites = check_auth(user)
+    # Если юзер прислал файл, проверим авторизацию
+    if len(user.attachments) > 0:
+        if db_requisites is None:
+            vk.send(user, ans.val_need)
+            vk.send(user, ans.val_name)
+        else:
+            order_print(user, db_requisites)
+        return
+    # Если юзер прислал текст, проверим не help ли это, если нет, то идём дальше
+    if len(user.message) > 0:
         for word in ans.ask_help:
             if word in user.message.lower():
                 kb.main_page(user)
                 return
-        register_bot_user(user)
+    # Если юзер прислал текст, но он не похож на обновление данных авторизации
+    if len(user.message.split('\n')) != 2:
+        if db_requisites is None:
+            vk.send(user, ans.val_need)
+            vk.send(user, ans.val_name)
+        else:
+            vk.send(user, ans.val_fail_format)
+            vk.send(user, ans.val_name)
         return
-    requisites = check_auth(user)
-    if requisites is None:
-        vk.send(user, ans.val_need)
-        vk.send(user, ans.val_name)
-        return
+    # Если юзер прислал текст, который похож на обновление данных авторизации
+    if len(user.message.split('\n')) == 2:
+        register_bot_user(user, db_requisites)
+        return 
+    # Если вообще непонятно что за сообщение пришло
+    vk.send(user, ans.val_unknown_message)
+    vk.send(user, ans.val_name)
 
-    order_print(user, requisites)
+
+
 
 
 def get_attachments(user: vk.EventUser):
@@ -112,9 +131,9 @@ def get_attachments(user: vk.EventUser):
         return os.path.join(settings.PDF_PATH, str(user.user_id), title), title
 
 
-def order_print(user: vk.EventUser, requisites):
+def order_print(user: vk.EventUser, db_requisites):
     # Check user
-    vk_id, surname, number = requisites
+    vk_id, surname, number = db_requisites
 
     path_title = get_attachments(user)
     pin = None
@@ -167,48 +186,38 @@ def order_print(user: vk.EventUser, requisites):
             )
 
 
-def register_bot_user(user: vk.EventUser):
-    if len(user.message.split('\n')) == 2:
-        surname = user.message.split('\n')[0].strip()
-        number = user.message.split('\n')[1].strip()
+def register_bot_user(user: vk.EventUser, db_requisites):
+    surname = user.message.split('\n')[0].strip()
+    number = user.message.split('\n')[1].strip()
+    
+    union_member = check_union_member(user, surname, number)
 
-        r = requests.get(settings.PRINT_URL + '/is_union_member', params=dict(surname=surname, v=1, number=number))
-        data: VkUser | None = session.query(VkUser).filter(VkUser.vk_id == user.user_id).one_or_none()
-        if r.json() and data is None:
-            session.add(VkUser(vk_id=user.user_id, surname=surname, number=number))
-            session.commit()
-            vk.send(user, ans.val_pass)
-            marketing.register(
-                vk_id=user.user_id,
-                surname=surname,
-                number=number,
-            )
-            return True
-        elif r.json() and data is not None:
-            data.surname = surname
-            data.number = number
-            session.commit()
-            vk.send(user, ans.val_update_pass)
-            marketing.re_register(
-                vk_id=user.user_id,
-                surname=surname,
-                number=number,
-            )
-            return True
-        elif r.json() is False:
-            vk.send(user, ans.val_fail)
-            vk.send(user, ans.val_name)
-            marketing.register_exc_wrong(
-                vk_id=user.user_id,
-                surname=surname,
-                number=number,
-            )
+    # Если юзер не состоит в профсоюзе
+    if union_member is None:
+        vk.send(user, ans.val_fail)
+        vk.send(user, ans.val_name)
+        marketing.register_exc_wrong(
+            vk_id=user.user_id,
+            surname=surname,
+            number=number,
+        )
+        return
+
+    # Писать разные сообщения на первичное добавление в базу и на обновление данных
+    if db_requisites is None:
+        add_user(user, surname, number)
+        vk.send(user, ans.val_pass)
+        marketing.register(
+            vk_id=user.user_id,
+            surname=surname,
+            number=number,
+        )
     else:
-        # TODO: check auth
-        data: VkUser | None = session.query(VkUser).filter(VkUser.vk_id == user.user_id).one_or_none()
-        if data is None:
-            vk.send(user, ans.val_need)
-            vk.send(user, ans.val_name)
-        else:
-            vk.send(user, ans.val_update_fail)
-            vk.send(user, ans.val_name)
+        update_user(user, surname, number)
+        vk.send(user, ans.val_update_pass)
+        marketing.re_register(
+            vk_id=user.user_id,
+            surname=surname,
+            number=number,
+        )
+
