@@ -5,23 +5,13 @@ import json
 import requests
 
 import src.vkontakte_functions as vk
-from src.db import VkUser, session
 from src.settings import Settings
 from src.answers import Answers
+from src.auth import check_auth
 
 
 settings = Settings()
 ans = Answers()
-
-
-def check_auth(user_id):
-    data: VkUser | None = session.query(VkUser).filter(VkUser.vk_id == user_id).one_or_none()
-    if data is not None:
-        r = requests.get(url=settings.PRINT_URL + '/is_union_member',
-                         params=dict(surname=data.surname, number=data.number, v=1))
-        if r.json():  # TODO: Is it correct?
-            return True
-    return False
 
 
 def main_page(user):
@@ -38,7 +28,7 @@ def main_page(user):
     kb = vk.VkKeyboard(inline=True)
 
     # If user not authenticated add button
-    if not check_auth(user.user_id):
+    if check_auth(user) is None:
         kb.add_button(ans.not_auth, color='negative', payload='{"command":"auth_false"}')
         kb.add_line()
         msg += ans.val_addition
@@ -48,8 +38,8 @@ def main_page(user):
     vk.send(user, msg, keyboard=kb.get_keyboard())
 
 
-def keyboard_browser(user, str_payload):
-    match json.loads(str_payload)['command']:
+def keyboard_browser(user: vk.EventUser, payload: str):
+    match json.loads(payload)['command']:
         case 'start':
             main_page(user)
         case 'help':
@@ -57,7 +47,7 @@ def keyboard_browser(user, str_payload):
         case 'conf':
             vk.send(user, ans.conf_full)
         case 'auth_false':
-            if check_auth(user.user_id):  # Prevent to tap old button
+            if check_auth(user) is not None:  # Prevent to tap old button
                 vk.send(user, ans.val_already)
                 return
             vk.send(user, ans.val_need)

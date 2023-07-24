@@ -1,5 +1,6 @@
 ﻿# Marakulin Andrey @annndruha
 # 2021
+
 import json
 import logging
 import os
@@ -16,7 +17,7 @@ import src.marketing as marketing
 import src.vkontakte_functions as vk
 from src.db import VkUser, reconnect_session, session
 from src.settings import Settings
-
+from src.auth import check_auth
 
 settings = Settings()
 ans = Answers()
@@ -73,25 +74,26 @@ def event_loop():
             message_analyzer(user)
 
 
-def message_analyzer(user):
-    if len(user.message) > 0:
+def message_analyzer(user: vk.EventUser):
+    # Define type of message: help, update requisites, file
+    if len(user.message) > 0 and len(user.attachments) == 0:
         for word in ans.ask_help:
             if word in user.message.lower():
                 kb.main_page(user)
                 return
+        register_bot_user(user)
+        return
 
-    if len(user.attachments) == 0:
-        if len(user.message) > 0:
-            register_bot_user(user)
-        else:
-            kb.main_page(user)
-    else:
-        requisites = check_union_member(user)
-        if requisites is not None:
-            order_print(user, requisites)
+    requisites = check_auth(user)
+    if requisites is None:
+        vk.send(user, ans.val_need)
+        vk.send(user, ans.exp_name)
+        return
+
+    order_print(user, requisites)
 
 
-def get_attachments(user):
+def get_attachments(user: vk.EventUser):
     if len(user.attachments) > 1:
         vk.send(user, ans.many_files)
         marketing.print_exc_many(
@@ -108,7 +110,7 @@ def get_attachments(user):
         return
     if user.attachments[0]['type'] == 'doc':
         ext = user.attachments[0]['doc']['ext']
-        if ext != 'pdf':
+        if ext not in ['pdf', 'PDF']:
             vk.send(user, ans.only_pdfs)
             marketing.print_exc_format(
                 file_ext=len(user.attachments[0]['doc']['ext']),
@@ -130,9 +132,11 @@ def get_attachments(user):
         return os.path.join(settings.PDF_PATH, str(user.user_id), title), title
 
 
-def order_print(user, requisites):
-    path_title = get_attachments(user)
+def order_print(user: vk.EventUser, requisites):
+    # Check user
     vk_id, surname, number = requisites
+
+    path_title = get_attachments(user)
     pin = None
     if path_title is not None:
         pdf_path, title = path_title
@@ -183,7 +187,7 @@ def order_print(user, requisites):
             )
 
 
-def register_bot_user(user):
+def register_bot_user(user: vk.EventUser):
     if len(user.message.split('\n')) == 2:
         surname = user.message.split('\n')[0].strip()
         number = user.message.split('\n')[1].strip()
@@ -203,6 +207,7 @@ def register_bot_user(user):
         elif r.json() and data is not None:
             data.surname = surname
             data.number = number
+            session.commit()
             vk.send(user, ans.val_update_pass)
             marketing.re_register(
                 vk_id=user.user_id,
@@ -219,6 +224,7 @@ def register_bot_user(user):
                 number=number,
             )
     else:
+        # TODO: check auth
         data: VkUser | None = session.query(VkUser).filter(VkUser.vk_id == user.user_id).one_or_none()
         if data is None:
             vk.send(user, ans.val_need)
@@ -226,19 +232,3 @@ def register_bot_user(user):
         else:
             vk.send(user, ans.val_update_fail)
             vk.send(user, ans.exp_name)
-
-
-def check_union_member(user):
-    data: VkUser | None = session.query(VkUser).filter(VkUser.vk_id == user.user_id).one_or_none()
-    if data is not None:
-        r = requests.get(
-            settings.PRINT_URL + '/is_union_member', params=dict(surname=data.surname, number=data.number, v=1)
-        )
-        if r.json():
-            return user.user_id, data.surname, data.number
-        else:
-            vk.send(user, ans.val_need)
-            vk.send(user, ans.exp_name)
-    else:
-        vk.send(user, ans.val_need)
-        vk.send(user, ans.exp_name)
