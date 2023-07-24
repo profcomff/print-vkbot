@@ -15,3 +15,6 @@ class Settings(BaseSettings):
     API_VERSION: str = '5.131'
 
     model_config = ConfigDict(case_sensitive=True, env_file=".env", extra="allow")
+
+
+settings = Settings()

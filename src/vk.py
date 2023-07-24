@@ -6,9 +6,7 @@ from vk_api.bot_longpoll import VkBotEvent, VkBotEventType, VkBotLongPoll
 from vk_api.keyboard import VkKeyboard
 from vk_api.utils import get_random_id
 
-from src.settings import Settings
-
-settings = Settings()
+from src.settings import settings
 
 # Auth with community token
 vk = VkApi(token=settings.BOT_TOKEN, api_version=settings.API_VERSION)

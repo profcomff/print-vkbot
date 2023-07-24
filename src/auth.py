@@ -5,9 +5,7 @@ import requests
 
 import src.vk as vk
 from src.db import VkUser, session
-from src.settings import Settings
-
-settings = Settings()
+from src.settings import settings
 
 
 def check_union_member(user: vk.EventUser, surname, number) -> None | tuple:

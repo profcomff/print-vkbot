@@ -10,16 +10,13 @@ import requests
 from sqlalchemy.exc import SQLAlchemyError
 from vk_api.exceptions import VkApiError
 
-import src.keybords as kb
-import src.marketing as marketing
 import src.vk as vk
+import src.keybords as kb
 import src.auth as auth
+import src.marketing as marketing
 from src.db import reconnect_session
-from src.settings import Settings
-from src.answers import Answers
-
-settings = Settings()
-ans = Answers()
+from src.settings import settings
+from src.answers import ans
 
 
 def event_loop():

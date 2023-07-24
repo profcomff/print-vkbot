@@ -4,12 +4,9 @@
 import json
 
 import src.vk as vk
-from src.answers import Answers
-from settings import Settings
+from src.answers import ans
+from settings import settings
 import src.auth as auth
-
-ans = Answers()
-settings = Settings()
 
 
 def file_settings(pin):
