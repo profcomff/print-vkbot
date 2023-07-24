@@ -2,10 +2,7 @@ import json
 
 import requests
 
-from src.settings import Settings
-
-
-settings = Settings()
+from src.settings import settings
 
 
 def pass_if_exc(func):

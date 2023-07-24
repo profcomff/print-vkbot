@@ -1,268 +1,180 @@
 ﻿# Marakulin Andrey @annndruha
-# 2021
+# 2023
+
 import json
 import logging
-import os
-import time
 import traceback
 
 import psycopg2
 import requests
 from sqlalchemy.exc import SQLAlchemyError
+from vk_api.bot_longpoll import VkBotEventType
 from vk_api.exceptions import VkApiError
 
-import src.answers as ru
+import src.auth as auth
 import src.keybords as kb
 import src.marketing as marketing
-import src.vkontakte_functions as vk
-from src.db import VkUser, reconnect_session, session
-from src.settings import Settings
+import src.vk as vk
+from src.answers import ans
+from src.db import reconnect_session
+from src.settings import settings
 
 
-settings = Settings()
-
-
-def get_attachments(user):
-    if len(user.attachments) > 1:
-        vk.write_msg(user, ru.print_ans['many_files'])
-        marketing.print_exc_many(
-            file_count=len(user.attachments),
-            vk_id=user.user_id,
-        )
-        return
-    if user.attachments[0]['type'] != 'doc':
-        vk.write_msg(user, ru.print_ans['only_pdfs'])
-        marketing.print_exc_format(
-            file_ext='image',
-            vk_id=user.user_id,
-        )
-        return
-    if user.attachments[0]['type'] == 'doc':
-        ext = user.attachments[0]['doc']['ext']
-        if ext != 'pdf':
-            vk.write_msg(user, ru.print_ans['only_pdfs'])
-            marketing.print_exc_format(
-                file_ext=len(user.attachments[0]['doc']['ext']),
-                vk_id=user.user_id,
-            )
-            return
-        title = user.attachments[0]['doc']['title']
-        url = user.attachments[0]['doc']['url']
-
-        if not os.path.exists(settings.PDF_PATH):
-            os.makedirs(settings.PDF_PATH)
-        if not os.path.exists(os.path.join(settings.PDF_PATH, str(user.user_id))):
-            os.makedirs(os.path.join(settings.PDF_PATH, str(user.user_id)))
-
-        r = requests.get(url, allow_redirects=True)
-        with open(os.path.join(settings.PDF_PATH, str(user.user_id), title), 'wb') as f:
-            f.write(r.content)
-        vk.write_msg(user, ru.print_ans['file_uploaded'].format(title))
-        return os.path.join(settings.PDF_PATH, str(user.user_id), title), title
-
-
-def order_print(user, requisites):
-    path_title = get_attachments(user)
-    vk_id, surname, number = requisites
-    pin = None
-    if path_title is not None:
-        pdf_path, title = path_title
-        r = requests.post(settings.PRINT_URL + '/file', json={'surname': surname, 'number': number, 'filename': title})
-        if r.status_code == 200:
-            pin = r.json()['pin']
-            files = {'file': (title, open(pdf_path, 'rb'), 'application/pdf', {'Expires': '0'})}
-            rfile = requests.post(settings.PRINT_URL + '/file/' + pin, files=files)
-            if rfile.status_code == 200:
-                kb_qr = vk.VkKeyboard(inline=True)
-                kb_qr.add_openlink_button(ru.print_ans['qr_button_text'], link=settings.PRINT_URL_QR + str(pin))
-                vk.send_keyboard(user, kb_qr.get_keyboard(), ru.print_ans['send_to_print'].format(pin))
-                marketing.print_success(
-                    vk_id=vk_id,
-                    surname=surname,
-                    number=number,
-                    pin=pin,
-                )
-            elif rfile.status_code == 413:
-                vk.write_msg(user, ru.errors['file_size_err'])
-                marketing.print_exc_other(
-                    vk_id=vk_id,
-                    surname=surname,
-                    number=number,
-                    pin=pin,
-                    status_code=rfile.status_code,
-                    description='File is too big',
-                )
-            else:
-                vk.write_msg(user, ru.errors['print_err'])
-                marketing.print_exc_other(
-                    vk_id=vk_id,
-                    surname=surname,
-                    number=number,
-                    pin=pin,
-                    status_code=rfile.status_code,
-                    description='Fail on file upload',
-                )
-        else:
-            vk.write_msg(user, ru.errors['print_err'])
-            marketing.print_exc_other(
-                vk_id=vk_id,
-                surname=surname,
-                number=number,
-                pin=pin,
-                status_code=r.status_code,
-                description='Fail on fetching code',
-            )
-
-
-def register_bot_user(user):
-    if len(user.message.split('\n')) == 2:
-        surname = user.message.split('\n')[0].strip()
-        number = user.message.split('\n')[1].strip()
-
-        r = requests.get(settings.PRINT_URL + '/is_union_member', params=dict(surname=surname, v=1, number=number))
-        data: VkUser | None = session.query(VkUser).filter(VkUser.vk_id == user.user_id).one_or_none()
-        if r.json() and data is None:
-            session.add(VkUser(vk_id=user.user_id, surname=surname, number=number))
-            session.commit()
-            kb.auth_button(user, ru.val_ans['val_pass'])
-            marketing.register(
-                vk_id=user.user_id,
-                surname=surname,
-                number=number,
-            )
-            return True
-        elif r.json() and data is not None:
-            data.surname = surname
-            data.number = number
-            kb.auth_button(user, ru.val_ans['val_update_pass'])
-            marketing.re_register(
-                vk_id=user.user_id,
-                surname=surname,
-                number=number,
-            )
-            return True
-        elif r.json() is False:
-            vk.write_msg(user, ru.val_ans['val_fail'])
-            vk.write_msg(user, ru.val_ans['exp_name'])
-            marketing.register_exc_wrong(
-                vk_id=user.user_id,
-                surname=surname,
-                number=number,
-            )
-    else:
-        data: VkUser | None = session.query(VkUser).filter(VkUser.vk_id == user.user_id).one_or_none()
-        if data is None:
-            vk.write_msg(user, ru.val_ans['val_need'])
-            vk.write_msg(user, ru.val_ans['exp_name'])
-        else:
-            vk.write_msg(user, ru.val_ans['val_update_fail'])
-            vk.write_msg(user, ru.val_ans['exp_name'])
-
-
-def check_union_member(user):
-    data: VkUser | None = session.query(VkUser).filter(VkUser.vk_id == user.user_id).one_or_none()
-    if data is not None:
-        r = requests.get(
-            settings.PRINT_URL + '/is_union_member', params=dict(surname=data.surname, number=data.number, v=1)
-        )
-        if r.json():
-            return user.user_id, data.surname, data.number
-        else:
-            vk.write_msg(user, ru.val_ans['val_need'])
-            vk.write_msg(user, ru.val_ans['exp_name'])
-    else:
-        vk.write_msg(user, ru.val_ans['val_need'])
-        vk.write_msg(user, ru.val_ans['exp_name'])
-
-
-def message_analyzer(user):
+def event_loop():
+    user = None
     try:
-        if len(user.message) > 0:
-            for word in ru.ask_help:
-                if word in user.message.lower():
-                    kb.main_page(user)
-                    kb.auth_button(user, links=True)
-                    return
-
-        if len(user.attachments) == 0:
-            if len(user.message) > 0:
-                register_bot_user(user)
+        vk.reconnect()
+        reconnect_session()
+        for event in vk.longpoll.listen():
+            if event.type != VkBotEventType.MESSAGE_NEW:
+                return
+            user = vk.EventUser(event)
+            if event.message.payload is not None:
+                kb.keyboard_browser(user, event.message.payload)
             else:
-                kb.main_page(user)
-                kb.auth_button(user, links=True)
-        else:
-            requisites = check_union_member(user)
-            if requisites is not None:
-                order_print(user, requisites)
-
-    except OSError as err:
-        raise err
-    except psycopg2.Error as err:
-        vk.write_msg(user, ru.errors['bd_error'])
-        raise err
+                message_analyzer(user)
+    except (OSError, VkApiError) as err:
+        vk.send(user, ans.err_vk, keyboard=kb.links_keyboard())
+        logging.error(err)
+        traceback.print_tb(err.__traceback__)
+    except (SQLAlchemyError, psycopg2.Error) as err:
+        vk.send(user, ans.err_bd, keyboard=kb.links_keyboard())
+        logging.error(err)
+        traceback.print_tb(err.__traceback__)
     except json.decoder.JSONDecodeError as err:
-        vk.write_msg(user, ru.errors['print_err'])
-        logging.error('JSONDecodeError (message_analyzer), description:')
+        vk.send(user, ans.err_kb, keyboard=kb.links_keyboard())
         logging.error(err)
         traceback.print_tb(err.__traceback__)
-        time.sleep(1)
     except Exception as err:
-        ans = ru.errors['im_broken']
-        vk.write_msg(user, ans)
-        logging.error('Unknown Exception (message_analyzer), description:')
+        vk.send(user, ans.err_fatal, keyboard=kb.links_keyboard())
         logging.error(err)
         traceback.print_tb(err.__traceback__)
 
 
-def process_event(event):
-    if event.type == vk.VkBotEventType.MESSAGE_NEW:
-        vk_user = vk.user_get(event.message['from_id'])
-        user = vk.User(
-            event.message['from_id'],
-            event.message['text'],
-            event.message.attachments,
-            (vk_user[0])['first_name'],
-            (vk_user[0])['last_name'],
-        )
-        if event.message.payload is not None:
-            kb.keyboard_browser(user, event.message.payload)
+def message_analyzer(user: vk.EventUser):
+    db_requisites = auth.check(user)
+    # Если юзер прислал файл, проверим авторизацию
+    if len(user.attachments) > 0:
+        if db_requisites is None:
+            vk.send(user, ans.val_need)
+            vk.send(user, ans.val_name)
         else:
-            message_analyzer(user)
+            order_print(user, db_requisites)
+        return
+    # Если юзер прислал текст, проверим не help ли это, если нет, то идём дальше
+    if len(user.message) > 0:
+        for word in ans.ask_help:
+            if word in user.message.lower():
+                kb.main_page(user)
+                return
+    # Если юзер прислал текст, но он не похож на обновление данных авторизации
+    if len(user.message.split('\n')) != 2:
+        if db_requisites is None:
+            vk.send(user, ans.val_need)
+            vk.send(user, ans.val_name)
+        else:
+            vk.send(user, ans.val_fail_format)
+            vk.send(user, ans.val_name)
+        return
+    # Если юзер прислал текст, который похож на обновление данных авторизации
+    if len(user.message.split('\n')) == 2:
+        register_bot_user(user, db_requisites)
+        return
+    # Если вообще непонятно что за сообщение пришло
+    vk.send(user, ans.val_unknown_message)
+    vk.send(user, ans.val_name)
 
 
-def chat_loop():
-    while True:
-        try:
-            vk.reconnect()
-            for event in vk.longpoll.listen():
-                process_event(event)
+def register_bot_user(user: vk.EventUser, db_requisites):
+    surname = user.message.split('\n')[0].strip()
+    number = user.message.split('\n')[1].strip()
 
-        except OSError as err:
-            logging.error('OSError (longpull_loop), description:')
-            logging.error(err)
-            traceback.print_tb(err.__traceback__)
-            try:
-                logging.warning('Try to reconnect VK...')
-                vk.reconnect()
-                logging.warning('VK connected successful')
-                time.sleep(1)
-            except VkApiError:
-                logging.error('Reconnect VK failed')
-                time.sleep(10)
+    union_member = auth.check_union_member(user, surname, number)
+    # Если юзер не состоит в профсоюзе
+    if union_member is None:
+        vk.send(user, ans.val_fail)
+        vk.send(user, ans.val_name)
+        marketing.register_exc_wrong(vk_id=user.user_id, surname=surname, number=number)
+        return
 
-        except (SQLAlchemyError, psycopg2.Error) as err:
-            logging.error('Database Error (longpull_loop), description:')
-            logging.error(err)
-            traceback.print_tb(err.__traceback__)
-            try:
-                logging.warning('Try to reconnect database...')
-                reconnect_session()
-                # time.sleep(5)
-            except psycopg2.Error:
-                logging.error('Reconnect database failed')
+    # Писать разные сообщения на первичное добавление в базу и на обновление данных
+    if db_requisites is None:
+        auth.add_user(user, surname, number)
+        vk.send(user, ans.val_pass)
+        marketing.register(vk_id=user.user_id, surname=surname, number=number)
+    else:
+        auth.update_user(user, surname, number)
+        vk.send(user, ans.val_update_pass)
+        marketing.re_register(vk_id=user.user_id, surname=surname, number=number)
 
-        except Exception as err:
-            logging.error('BaseException (longpull_loop), description:')
-            traceback.print_tb(err.__traceback__)
-            logging.error(err)
-            time.sleep(10)
+
+def get_attachments(user: vk.EventUser):
+    if len(user.attachments) > 1:
+        vk.send(user, ans.warn_many_files)
+        marketing.print_exc_many(file_count=len(user.attachments), vk_id=user.user_id)
+        return
+
+    if user.attachments[0]['type'] != 'doc':
+        vk.send(user, ans.warn_only_pdfs)
+        marketing.print_exc_format(file_ext='image', vk_id=user.user_id)
+        return
+
+    if user.attachments[0]['doc']['ext'] not in ['pdf', 'PDF']:
+        vk.send(user, ans.warn_only_pdfs)
+        marketing.print_exc_format(file_ext=len(user.attachments[0]['doc']['ext']), vk_id=user.user_id)
+        return
+
+    title = user.attachments[0]['doc']['title']
+    url = user.attachments[0]['doc']['url']
+    r = requests.get(url, allow_redirects=True)
+    return r.content, title
+
+
+def order_print(user: vk.EventUser, db_requisites):
+    # Get user attachment
+    file_content_title = get_attachments(user)
+    if file_content_title is None:
+        return
+
+    # Get pin
+    content, title = file_content_title
+    vk_id, surname, number = db_requisites
+    r = requests.post(settings.PRINT_URL + '/file', json={'surname': surname, 'number': number, 'filename': title})
+
+    # If get pin error
+    if r.status_code != 200:
+        vk.send(user, ans.err_print)
+        marketing.print_exc_other(
+            vk_id=vk_id, surname=surname, number=number, status_code=r.status_code, description='Fail on fetching code'
+        )
+        return
+
+    # Upload file with pin
+    pin = r.json()['pin']
+    files = {'file': (title, content, 'application/pdf', {'Expires': '0'})}
+    r = requests.post(settings.PRINT_URL + '/file/' + pin, files=files)
+
+    # Send response
+    if r.status_code == 200:
+        vk.send(user, ans.send_to_print.format(title, pin), keyboard=kb.file_settings(pin))
+        marketing.print_success(vk_id=vk_id, surname=surname, number=number, pin=pin)
+    elif r.status_code == 413:
+        vk.send(user, ans.warn_filesize)
+        marketing.print_exc_other(
+            vk_id=vk_id,
+            surname=surname,
+            number=number,
+            pin=pin,
+            status_code=r.status_code,
+            description='File is too big',
+        )
+    else:
+        vk.send(user, ans.err_print)
+        marketing.print_exc_other(
+            vk_id=vk_id,
+            surname=surname,
+            number=number,
+            pin=pin,
+            status_code=r.status_code,
+            description='Fail on file upload',
+        )
