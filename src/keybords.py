@@ -3,10 +3,10 @@
 
 import json
 
-import src.vk as vk
-from src.answers import ans
-from settings import settings
 import src.auth as auth
+import src.vk as vk
+from settings import settings
+from src.answers import ans
 
 
 def file_settings(pin):

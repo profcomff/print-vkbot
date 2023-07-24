@@ -8,6 +8,7 @@ from vk_api.utils import get_random_id
 
 from src.settings import settings
 
+
 # Auth with community token
 vk = VkApi(token=settings.BOT_TOKEN, api_version=settings.API_VERSION)
 longpoll = VkBotLongPoll(vk, group_id=settings.GROUP_ID)
