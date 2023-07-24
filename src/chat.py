@@ -1,5 +1,5 @@
 ﻿# Marakulin Andrey @annndruha
-# 2021
+# 2023
 
 import json
 import logging
@@ -8,6 +8,7 @@ import traceback
 import psycopg2
 import requests
 from sqlalchemy.exc import SQLAlchemyError
+from vk_api.bot_longpoll import VkBotEventType
 from vk_api.exceptions import VkApiError
 
 import src.auth as auth
@@ -25,7 +26,7 @@ def event_loop():
         vk.reconnect()
         reconnect_session()
         for event in vk.longpoll.listen():
-            if event.type != vk.VkBotEventType.MESSAGE_NEW:
+            if event.type != VkBotEventType.MESSAGE_NEW:
                 return
 
             user = vk.EventUser(event)

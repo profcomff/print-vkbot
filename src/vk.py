@@ -1,8 +1,8 @@
 # Marakulin Andrey @annndruha
-# 2021
+# 2023
 
 from vk_api import VkApi
-from vk_api.bot_longpoll import VkBotEvent, VkBotEventType, VkBotLongPoll
+from vk_api.bot_longpoll import VkBotEvent, VkBotLongPoll
 from vk_api.keyboard import VkKeyboard
 from vk_api.utils import get_random_id
 
@@ -12,10 +12,6 @@ from src.settings import settings
 # Auth with community token
 vk = VkApi(token=settings.BOT_TOKEN, api_version=settings.API_VERSION)
 longpoll = VkBotLongPoll(vk, group_id=settings.GROUP_ID)
-
-# This statement need to avoid imports form vk_api in chat.py and keyboards.py
-VkKeyboard = VkKeyboard
-VkBotEventType = VkBotEventType
 
 
 def reconnect():

@@ -3,6 +3,8 @@
 
 import json
 
+from vk_api.keyboard import VkKeyboard
+
 import src.auth as auth
 import src.vk as vk
 from settings import settings
@@ -10,7 +12,7 @@ from src.answers import ans
 
 
 def file_settings(pin):
-    kb = vk.VkKeyboard(inline=True)
+    kb = VkKeyboard(inline=True)
     kb.add_openlink_button(ans.qr_button_text, link=settings.PRINT_URL_QR + str(pin))
     return kb.get_keyboard()
 
@@ -18,7 +20,7 @@ def file_settings(pin):
 def main_page(user):
     # Send hi message and keyboard
     msg = ans.hey
-    kb = vk.VkKeyboard(one_time=False)
+    kb = VkKeyboard(one_time=False)
     kb.add_button(ans.inst, color='primary', payload='{"command":"help"}')
     kb.add_line()
     kb.add_button(ans.conf, color='primary', payload='{"command":"conf"}')
@@ -26,7 +28,7 @@ def main_page(user):
 
     # Send help message and inline-keyboard
     msg = ans.help
-    kb = vk.VkKeyboard(inline=True)
+    kb = VkKeyboard(inline=True)
 
     # If user not authenticated add button
     if auth.check(user) is None:
