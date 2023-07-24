@@ -11,13 +11,13 @@ import requests
 from sqlalchemy.exc import SQLAlchemyError
 from vk_api.exceptions import VkApiError
 
-from src.answers import Answers
 import src.keybords as kb
 import src.marketing as marketing
-import src.vkontakte_functions as vk
+import src.vk as vk
+from src.auth import check_auth
 from src.db import VkUser, reconnect_session, session
 from src.settings import Settings
-from src.auth import check_auth
+from src.answers import Answers
 
 settings = Settings()
 ans = Answers()

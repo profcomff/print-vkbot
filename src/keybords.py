@@ -4,7 +4,7 @@
 import json
 import requests
 
-import src.vkontakte_functions as vk
+import src.vk as vk
 from src.settings import Settings
 from src.answers import Answers
 from src.auth import check_auth

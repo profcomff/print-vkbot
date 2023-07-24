@@ -3,7 +3,7 @@
 
 import requests
 
-import vkontakte_functions as vk
+import src.vk as vk
 from src.db import VkUser, session
 from src.settings import Settings
 
