@@ -92,40 +92,32 @@ def message_analyzer(user: vk.EventUser):
 def get_attachments(user: vk.EventUser):
     if len(user.attachments) > 1:
         vk.send(user, ans.warn_many_files)
-        marketing.print_exc_many(
-            file_count=len(user.attachments),
-            vk_id=user.user_id,
-        )
+        marketing.print_exc_many(file_count=len(user.attachments), vk_id=user.user_id,)
         return
+
     if user.attachments[0]['type'] != 'doc':
         vk.send(user, ans.warn_only_pdfs)
-        marketing.print_exc_format(
-            file_ext='image',
-            vk_id=user.user_id,
-        )
+        marketing.print_exc_format(file_ext='image', vk_id=user.user_id,)
         return
-    if user.attachments[0]['type'] == 'doc':
-        ext = user.attachments[0]['doc']['ext']
-        if ext not in ['pdf', 'PDF']:
-            vk.send(user, ans.warn_only_pdfs)
-            marketing.print_exc_format(
-                file_ext=len(user.attachments[0]['doc']['ext']),
-                vk_id=user.user_id,
-            )
-            return
-        title = user.attachments[0]['doc']['title']
-        url = user.attachments[0]['doc']['url']
 
-        if not os.path.exists(settings.PDF_PATH):
-            os.makedirs(settings.PDF_PATH)
-        if not os.path.exists(os.path.join(settings.PDF_PATH, str(user.user_id))):
-            os.makedirs(os.path.join(settings.PDF_PATH, str(user.user_id)))
+    if user.attachments[0]['doc']['ext'] not in ['pdf', 'PDF']:
+        vk.send(user, ans.warn_only_pdfs)
+        marketing.print_exc_format(file_ext=len(user.attachments[0]['doc']['ext']), vk_id=user.user_id,)
+        return
 
-        r = requests.get(url, allow_redirects=True)
-        with open(os.path.join(settings.PDF_PATH, str(user.user_id), title), 'wb') as f:
-            f.write(r.content)
-        vk.send(user, ans.file_uploaded.format(title))
-        return os.path.join(settings.PDF_PATH, str(user.user_id), title), title
+    title = user.attachments[0]['doc']['title']
+    url = user.attachments[0]['doc']['url']
+
+    if not os.path.exists(settings.PDF_PATH):
+        os.makedirs(settings.PDF_PATH)
+    if not os.path.exists(os.path.join(settings.PDF_PATH, str(user.user_id))):
+        os.makedirs(os.path.join(settings.PDF_PATH, str(user.user_id)))
+
+    r = requests.get(url, allow_redirects=True)
+    with open(os.path.join(settings.PDF_PATH, str(user.user_id), title), 'wb') as f:
+        f.write(r.content)
+    vk.send(user, ans.file_uploaded.format(title))
+    return os.path.join(settings.PDF_PATH, str(user.user_id), title), title
 
 
 def order_print(user: vk.EventUser, db_requisites):
