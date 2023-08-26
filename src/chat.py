@@ -16,7 +16,6 @@ import src.keybords as kb
 import src.marketing as marketing
 import src.vk as vk
 from src.answers import ans
-from src.db import reconnect_session
 from src.settings import settings
 
 
@@ -25,7 +24,6 @@ def event_loop():
     try:
         for event in vk.longpoll.listen():
             vk.reconnect()
-            reconnect_session()
             if event.type != VkBotEventType.MESSAGE_NEW:
                 return
             user = vk.EventUser(event)

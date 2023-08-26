@@ -31,20 +31,3 @@ class VkUser(Base):
     vk_id: Mapped[int] = mapped_column(sqlalchemy.BIGINT, primary_key=True)
     surname: Mapped[int] = mapped_column(sqlalchemy.String, nullable=False)
     number: Mapped[int] = mapped_column(sqlalchemy.String, nullable=False)
-
-
-engine = create_engine(url=str(settings.DB_DSN), pool_pre_ping=True, isolation_level="AUTOCOMMIT")
-Session = sessionmaker(bind=engine)
-session = Session()
-
-
-def reconnect_session():
-    global engine
-    global Session
-    global session
-
-    session.rollback()
-    engine = create_engine(url=str(settings.DB_DSN), pool_pre_ping=True, isolation_level="AUTOCOMMIT")
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    session.rollback()
