@@ -137,10 +137,9 @@ def order_print(user: vk.EventUser, db_requisites):
     # Get pin
     content, title = file_content_title
     vk_id, surname, number = db_requisites
-    r = requests.post(settings.PRINT_URL + '/file', json={'surname': surname,
-                                                          'number': number,
-                                                          'filename': title,
-                                                          'source': 'vkbot'})
+    r = requests.post(
+        settings.PRINT_URL + '/file', json={'surname': surname, 'number': number, 'filename': title, 'source': 'vkbot'}
+    )
 
     # If get pin error
     if r.status_code != 200:
