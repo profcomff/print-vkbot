@@ -5,7 +5,7 @@ import requests
 from sqlalchemy.orm import Session
 
 import src.vk as vk
-from src.db import VkUser, Session
+from src.db import Session, VkUser
 from src.settings import settings
 
 
