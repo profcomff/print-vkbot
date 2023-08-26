@@ -34,3 +34,4 @@ class VkUser(Base):
 
 
 engine = create_engine(url=str(settings.DB_DSN), pool_pre_ping=True, isolation_level="AUTOCOMMIT")
+Session = sessionmaker(bind=engine)
