@@ -34,17 +34,3 @@ class VkUser(Base):
 
 
 engine = create_engine(url=str(settings.DB_DSN), pool_pre_ping=True, isolation_level="AUTOCOMMIT")
-Session = sessionmaker(bind=engine)
-session = Session()
-
-
-def reconnect_session():
-    global engine
-    global Session
-    global session
-
-    session.rollback()
-    engine = create_engine(url=str(settings.DB_DSN), pool_pre_ping=True, isolation_level="AUTOCOMMIT")
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    session.rollback()

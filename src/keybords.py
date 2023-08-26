@@ -7,8 +7,8 @@ from vk_api.keyboard import VkKeyboard
 
 import src.auth as auth
 import src.vk as vk
-from src.settings import settings
 from src.answers import ans
+from src.settings import settings
 
 
 def file_settings(pin):
