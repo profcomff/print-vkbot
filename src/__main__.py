@@ -1,6 +1,6 @@
 import logging
 
-from src.chat import event_loop
+from src.handlers import event_loop
 
 
 logging.getLogger("httpx").setLevel(logging.WARNING)

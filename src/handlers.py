@@ -22,8 +22,8 @@ from src.settings import settings
 def event_loop():
     user = None
     try:
+        vk.reconnect()
         for event in vk.longpoll.listen():
-            vk.reconnect()
             if event.type != VkBotEventType.MESSAGE_NEW:
                 return
             user = vk.EventUser(event)
