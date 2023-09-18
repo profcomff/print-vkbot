@@ -3,6 +3,7 @@
 
 import json
 import logging
+import time
 import traceback
 
 import psycopg2
@@ -31,7 +32,9 @@ def event_loop():
                 kb.keyboard_browser(user, event.message.payload)
             else:
                 message_analyzer(user)
-    except (OSError, VkApiError) as err:
+    except (OSError, VkApiError, requests.RequestException) as err:
+        time.sleep(5)
+        vk.reconnect()
         vk.send(user, ans.err_vk, keyboard=kb.links_keyboard())
         logging.error(err)
         traceback.print_tb(err.__traceback__)
