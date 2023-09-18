@@ -25,9 +25,16 @@ def event_loop():
     try:
         vk.reconnect()
         for event in vk.longpoll.listen():
-            if event.type != VkBotEventType.MESSAGE_NEW:
+            if event.type not in [VkBotEventType.MESSAGE_NEW, VkBotEventType.MESSAGE_ALLOW]:
+                if event.type != VkBotEventType.MESSAGE_REPLY:
+                    logging.warning('UNKNOWN EVENT TYPE:' + str(event.type))
                 return
+
             user = vk.EventUser(event)
+            if event.type == VkBotEventType.MESSAGE_ALLOW:
+                kb.main_page(user)
+                return
+
             if event.message.payload is not None:
                 kb.keyboard_browser(user, event.message.payload)
             else:
