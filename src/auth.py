@@ -16,6 +16,14 @@ def check_union_member(user: vk.EventUser, surname, number) -> None | tuple:
     return None
 
 
+def check_user_in_db(user: vk.EventUser) -> None | tuple:
+    with Session() as session:
+        data: VkUser | None = session.query(VkUser).filter(VkUser.vk_id == user.user_id).one_or_none()
+    if data is not None:
+        return user.user_id, data.surname, data.number
+    return None
+
+
 def check(user: vk.EventUser) -> None | tuple:
     """
     :param user: Object of vk.EventUser

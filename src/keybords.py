@@ -19,7 +19,7 @@ def file_settings(pin):
 
 def links_keyboard():
     kb = VkKeyboard(inline=True)
-    kb.add_openlink_button('Твой ФФ!', link='https://app.profcomff.com')
+    kb.add_openlink_button('Твой ФФ!', link='https://app.profcomff.com/apps')
     kb.add_openlink_button('Telegram-бот', link='https://t.me/profcomff_print_bot')
     return kb.get_keyboard()
 

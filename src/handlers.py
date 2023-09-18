@@ -99,7 +99,7 @@ def register_bot_user(user: vk.EventUser, db_requisites):
         return
 
     # Писать разные сообщения на первичное добавление в базу и на обновление данных
-    if db_requisites is None:
+    if auth.check_user_in_db(user) is None:
         auth.add_user(user, surname, number)
         vk.send(user, ans.val_pass)
         marketing.register(vk_id=user.user_id, surname=surname, number=number)
