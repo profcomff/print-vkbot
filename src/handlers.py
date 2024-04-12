@@ -178,6 +178,16 @@ def order_print(user: vk.EventUser, db_requisites):
             status_code=r.status_code,
             description='File is too big',
         )
+    elif r.status_code == 415:
+        vk.send(user, ans.warn_only_pdfs)
+        marketing.print_exc_other(
+            vk_id=vk_id,
+            surname=surname,
+            number=number,
+            pin=pin,
+            status_code=r.status_code,
+            description='Unsupported Media Type',
+        )
     else:
         vk.send(user, ans.err_print)
         marketing.print_exc_other(
