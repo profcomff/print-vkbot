@@ -40,7 +40,9 @@ class EventUser:
             r = vk.method('users.get', {'user_ids': self.user_id})
             self.first_name = r[0]['first_name']
             self.last_name = r[0]['last_name']
-        logging.info(f"[{self.user_id} {self.first_name} {self.last_name}]: {repr(self.message)} {repr(self.attachments)}")
+        logging.info(
+            f"[{self.user_id} {self.first_name} {self.last_name}]: {repr(self.message)} {repr(self.attachments)}"
+        )
 
 
 def send(user: EventUser, message: str, keyboard: VkKeyboard | None = None):
