@@ -123,12 +123,12 @@ def get_attachments(user: vk.EventUser):
         return
 
     if user.attachments[0]['type'] != 'doc':
-        vk.send(user, ans.warn_unreadable_file)
+        vk.send(user, ans.warn_only_pdfs)
         marketing.print_exc_format(file_ext='image', vk_id=user.user_id)
         return
 
     if user.attachments[0]['doc']['ext'] not in ['pdf', 'PDF']:
-        vk.send(user, ans.warn_unreadable_file)
+        vk.send(user, ans.warn_only_pdfs)
         marketing.print_exc_format(file_ext=len(user.attachments[0]['doc']['ext']), vk_id=user.user_id)
         return
 

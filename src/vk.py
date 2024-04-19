@@ -3,7 +3,7 @@
 import logging
 
 from vk_api import VkApi
-from vk_api.bot_longpoll import VkBotEvent, VkBotLongPoll, VkBotEventType
+from vk_api.bot_longpoll import VkBotEvent, VkBotEventType, VkBotLongPoll
 from vk_api.keyboard import VkKeyboard
 from vk_api.utils import get_random_id
 
