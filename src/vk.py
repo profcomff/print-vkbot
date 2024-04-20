@@ -3,7 +3,7 @@
 import logging
 
 from vk_api import VkApi
-from vk_api.bot_longpoll import VkBotEvent, VkBotLongPoll, VkBotEventType
+from vk_api.bot_longpoll import VkBotEvent, VkBotEventType, VkBotLongPoll
 from vk_api.keyboard import VkKeyboard
 from vk_api.utils import get_random_id
 
@@ -40,7 +40,9 @@ class EventUser:
             r = vk.method('users.get', {'user_ids': self.user_id})
             self.first_name = r[0]['first_name']
             self.last_name = r[0]['last_name']
-        logging.info(f"[{self.user_id} {self.first_name} {self.last_name}]: {repr(self.message)} {repr(self.attachments)}")
+        logging.info(
+            f"[{self.user_id} {self.first_name} {self.last_name}]: {repr(self.message)} {repr(self.attachments)}"
+        )
 
 
 def send(user: EventUser, message: str, keyboard: VkKeyboard | None = None):
