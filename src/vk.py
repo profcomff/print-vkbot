@@ -30,6 +30,7 @@ class EventUser:
             self.attachments = []
 
             r = vk.method('users.get', {'user_ids': self.user_id})
+            logging.error(r)
             self.first_name = r['response'][0]['first_name']
             self.last_name = r['response'][0]['last_name']
         else:
@@ -38,6 +39,7 @@ class EventUser:
             self.attachments = event.message.attachments
 
             r = vk.method('users.get', {'user_ids': self.user_id})
+            logging.error(r)
             self.first_name = r['response'][0]['first_name']
             self.last_name = r['response'][0]['last_name']
         logging.info(
