@@ -3,12 +3,13 @@
 
 import json
 
-from vk_api.keyboard import VkKeyboard
-
 import src.auth as auth
 import src.vk as vk
 from src.answers import ans
-from src.settings import settings
+from src.settings import get_settings
+from vk_api.keyboard import VkKeyboard
+
+settings = get_settings()
 
 
 def file_settings(pin):
@@ -19,8 +20,8 @@ def file_settings(pin):
 
 def links_keyboard():
     kb = VkKeyboard(inline=True)
-    kb.add_openlink_button('Твой ФФ!', link='https://app.profcomff.com/apps')
-    kb.add_openlink_button('Telegram-бот', link='https://t.me/profcomff_print_bot')
+    kb.add_openlink_button("Твой ФФ!", link="https://app.profcomff.com/apps")
+    kb.add_openlink_button("Telegram-бот", link="https://t.me/profcomff_print_bot")
     return kb.get_keyboard()
 
 
@@ -28,9 +29,9 @@ def main_page(user):
     # Send hi message and keyboard
     msg = ans.hey
     kb = VkKeyboard(one_time=False)
-    kb.add_button(ans.inst, color='primary', payload='{"command":"help"}')
+    kb.add_button(ans.inst, color="primary", payload='{"command":"help"}')
     kb.add_line()
-    kb.add_button(ans.conf, color='primary', payload='{"command":"conf"}')
+    kb.add_button(ans.conf, color="primary", payload='{"command":"conf"}')
     vk.send(user, msg, keyboard=kb.get_keyboard())
 
     # Send help message and inline-keyboard
@@ -39,24 +40,26 @@ def main_page(user):
 
     # If user not authenticated add button
     if auth.check(user) is None:
-        kb.add_button(ans.not_auth, color='negative', payload='{"command":"auth_false"}')
+        kb.add_button(
+            ans.not_auth, color="negative", payload='{"command":"auth_false"}'
+        )
         kb.add_line()
         msg += ans.val_addition
 
-    kb.add_openlink_button('Твой ФФ!', link='https://app.profcomff.com')
-    kb.add_openlink_button('Telegram-бот', link='https://t.me/profcomff_print_bot')
+    kb.add_openlink_button("Твой ФФ!", link="https://app.profcomff.com")
+    kb.add_openlink_button("Telegram-бот", link="https://t.me/profcomff_print_bot")
     vk.send(user, msg, keyboard=kb.get_keyboard())
 
 
 def keyboard_browser(user: vk.EventUser, payload: str):
-    match json.loads(payload)['command']:
-        case 'start':
+    match json.loads(payload)["command"]:
+        case "start":
             main_page(user)
-        case 'help':
+        case "help":
             main_page(user)
-        case 'conf':
+        case "conf":
             vk.send(user, ans.conf_full)
-        case 'auth_false':
+        case "auth_false":
             if auth.check(user) is not None:  # Prevent to tap old button
                 vk.send(user, ans.val_already)
                 return

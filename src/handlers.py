@@ -8,16 +8,17 @@ import traceback
 
 import psycopg2
 import requests
-from sqlalchemy.exc import SQLAlchemyError
-from vk_api.bot_longpoll import VkBotEventType
-from vk_api.exceptions import VkApiError
-
 import src.auth as auth
 import src.keybords as kb
 import src.marketing as marketing
 import src.vk as vk
+from sqlalchemy.exc import SQLAlchemyError
 from src.answers import ans
-from src.settings import settings
+from src.settings import get_settings
+from vk_api.bot_longpoll import VkBotEventType
+from vk_api.exceptions import VkApiError
+
+settings = get_settings()
 
 
 def event_loop():
@@ -25,9 +26,12 @@ def event_loop():
     try:
         vk.reconnect()
         for event in vk.longpoll.listen():
-            if event.type not in [VkBotEventType.MESSAGE_NEW, VkBotEventType.MESSAGE_ALLOW]:
+            if event.type not in [
+                VkBotEventType.MESSAGE_NEW,
+                VkBotEventType.MESSAGE_ALLOW,
+            ]:
                 if event.type != VkBotEventType.MESSAGE_REPLY:
-                    logging.warning('UNKNOWN EVENT TYPE:' + str(event.type))
+                    logging.warning("UNKNOWN EVENT TYPE:" + str(event.type))
                 return
 
             user = vk.EventUser(event)
@@ -76,7 +80,7 @@ def message_analyzer(user: vk.EventUser):
                 kb.main_page(user)
                 return
     # Если юзер прислал текст, но он не похож на обновление данных авторизации
-    if len(user.message.split('\n')) != 2:
+    if len(user.message.split("\n")) != 2:
         if db_requisites is None:
             vk.send(user, ans.val_need)
             vk.send(user, ans.val_name)
@@ -85,7 +89,7 @@ def message_analyzer(user: vk.EventUser):
             vk.send(user, ans.val_name)
         return
     # Если юзер прислал текст, который похож на обновление данных авторизации
-    if len(user.message.split('\n')) == 2:
+    if len(user.message.split("\n")) == 2:
         register_bot_user(user, db_requisites)
         return
     # Если вообще непонятно что за сообщение пришло
@@ -94,8 +98,8 @@ def message_analyzer(user: vk.EventUser):
 
 
 def register_bot_user(user: vk.EventUser, db_requisites):
-    surname = user.message.split('\n')[0].strip()
-    number = user.message.split('\n')[1].strip()
+    surname = user.message.split("\n")[0].strip()
+    number = user.message.split("\n")[1].strip()
 
     union_member = auth.check_union_member(user, surname, number)
     # Если юзер не состоит в профсоюзе
@@ -122,18 +126,20 @@ def get_attachments(user: vk.EventUser):
         marketing.print_exc_many(file_count=len(user.attachments), vk_id=user.user_id)
         return
 
-    if user.attachments[0]['type'] != 'doc':
+    if user.attachments[0]["type"] != "doc":
         vk.send(user, ans.warn_only_pdfs)
-        marketing.print_exc_format(file_ext='image', vk_id=user.user_id)
+        marketing.print_exc_format(file_ext="image", vk_id=user.user_id)
         return
 
-    if user.attachments[0]['doc']['ext'] not in ['pdf', 'PDF']:
+    if user.attachments[0]["doc"]["ext"] not in ["pdf", "PDF"]:
         vk.send(user, ans.warn_only_pdfs)
-        marketing.print_exc_format(file_ext=len(user.attachments[0]['doc']['ext']), vk_id=user.user_id)
+        marketing.print_exc_format(
+            file_ext=len(user.attachments[0]["doc"]["ext"]), vk_id=user.user_id
+        )
         return
 
-    title = user.attachments[0]['doc']['title']
-    url = user.attachments[0]['doc']['url']
+    title = user.attachments[0]["doc"]["title"]
+    url = user.attachments[0]["doc"]["url"]
     r = requests.get(url, allow_redirects=True)
     return r.content, title
 
@@ -148,25 +154,37 @@ def order_print(user: vk.EventUser, db_requisites):
     content, title = file_content_title
     vk_id, surname, number = db_requisites
     r = requests.post(
-        settings.PRINT_URL + '/file', json={'surname': surname, 'number': number, 'filename': title, 'source': 'vkbot'}
+        settings.PRINT_URL + "/file",
+        json={
+            "surname": surname,
+            "number": number,
+            "filename": title,
+            "source": "vkbot",
+        },
     )
 
     # If get pin error
     if r.status_code != 200:
         vk.send(user, ans.err_print)
         marketing.print_exc_other(
-            vk_id=vk_id, surname=surname, number=number, status_code=r.status_code, description='Fail on fetching code'
+            vk_id=vk_id,
+            surname=surname,
+            number=number,
+            status_code=r.status_code,
+            description="Fail on fetching code",
         )
         return
 
     # Upload file with pin
-    pin = r.json()['pin']
-    files = {'file': (title, content, 'application/pdf', {'Expires': '0'})}
-    r = requests.post(settings.PRINT_URL + '/file/' + pin, files=files)
+    pin = r.json()["pin"]
+    files = {"file": (title, content, "application/pdf", {"Expires": "0"})}
+    r = requests.post(settings.PRINT_URL + "/file/" + pin, files=files)
 
     # Send response
     if r.status_code == 200:
-        vk.send(user, ans.send_to_print.format(title, pin), keyboard=kb.file_settings(pin))
+        vk.send(
+            user, ans.send_to_print.format(title, pin), keyboard=kb.file_settings(pin)
+        )
         marketing.print_success(vk_id=vk_id, surname=surname, number=number, pin=pin)
     elif r.status_code == 413:
         vk.send(user, ans.warn_filesize)
@@ -176,7 +194,7 @@ def order_print(user: vk.EventUser, db_requisites):
             number=number,
             pin=pin,
             status_code=r.status_code,
-            description='File is too big',
+            description="File is too big",
         )
     elif r.status_code == 415:
         vk.send(user, ans.warn_unreadable_file)
@@ -186,7 +204,7 @@ def order_print(user: vk.EventUser, db_requisites):
             number=number,
             pin=pin,
             status_code=r.status_code,
-            description='Unsupported Media Type',
+            description="Unsupported Media Type",
         )
     else:
         vk.send(user, ans.err_print)
@@ -196,5 +214,5 @@ def order_print(user: vk.EventUser, db_requisites):
             number=number,
             pin=pin,
             status_code=r.status_code,
-            description='Fail on file upload',
+            description="Fail on file upload",
         )

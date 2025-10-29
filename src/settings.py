@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     PRINT_URL: str
     PRINT_URL_QR: str
     # Hardcode settings
-    API_VERSION: str = '5.131'
+    API_VERSION: str = "5.131"
 
     # bot limitation
     MAX_PDF_SIZE_MB: int
@@ -41,7 +41,7 @@ async def sync_from_server():
     """Syncs the settings with server"""
     settings = get_settings()
     response = requests.get(
-        "app.profcomff.com/admin/settings", # Вот тут не уверен с адресом...
+        "app.profcomff.com/admin/settings",  # Вот тут не уверен с адресом...
         headers={"Authorization": f"Bearer {settings.BOT_TOKEN}"},
         timeout=10,
     )

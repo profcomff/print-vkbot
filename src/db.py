@@ -5,8 +5,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import as_declarative, declared_attr
 from sqlalchemy.orm import Mapped, mapped_column, sessionmaker
 
-from src.settings import settings
-
 
 @as_declarative()
 class Base:
@@ -24,7 +22,7 @@ class Base:
         attrs = []
         for c in self.__table__.columns:
             attrs.append(f"{c.name}={getattr(self, c.name)}")
-        return "{}({})".format(self.__class__.__name__, ', '.join(attrs))
+        return "{}({})".format(self.__class__.__name__, ", ".join(attrs))
 
 
 class VkUser(Base):
@@ -33,5 +31,7 @@ class VkUser(Base):
     number: Mapped[int] = mapped_column(sqlalchemy.String, nullable=False)
 
 
-engine = create_engine(url=str(settings.DB_DSN), pool_pre_ping=True, isolation_level="AUTOCOMMIT")
+engine = create_engine(
+    url=str(settings.DB_DSN), pool_pre_ping=True, isolation_level="AUTOCOMMIT"
+)
 Session = sessionmaker(bind=engine)
