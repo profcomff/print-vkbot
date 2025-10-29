@@ -2,12 +2,13 @@
 # 2023
 import logging
 
+from src.settings import get_settings
 from vk_api import VkApi
 from vk_api.bot_longpoll import VkBotEvent, VkBotEventType, VkBotLongPoll
 from vk_api.keyboard import VkKeyboard
 from vk_api.utils import get_random_id
 
-from src.settings import settings
+settings = get_settings()
 
 
 # Auth with community token
@@ -25,21 +26,21 @@ def reconnect():
 class EventUser:
     def __init__(self, event: VkBotEvent):
         if event.type == VkBotEventType.MESSAGE_ALLOW:
-            self.user_id = event.obj['user_id']
-            self.message = ''
+            self.user_id = event.obj["user_id"]
+            self.message = ""
             self.attachments = []
 
-            r = vk.method('users.get', {'user_ids': self.user_id})
-            self.first_name = r[0]['first_name']
-            self.last_name = r[0]['last_name']
+            r = vk.method("users.get", {"user_ids": self.user_id})
+            self.first_name = r[0]["first_name"]
+            self.last_name = r[0]["last_name"]
         else:
-            self.user_id = event.message['from_id']
-            self.message = event.message['text']
+            self.user_id = event.message["from_id"]
+            self.message = event.message["text"]
             self.attachments = event.message.attachments
 
-            r = vk.method('users.get', {'user_ids': self.user_id})
-            self.first_name = r[0]['first_name']
-            self.last_name = r[0]['last_name']
+            r = vk.method("users.get", {"user_ids": self.user_id})
+            self.first_name = r[0]["first_name"]
+            self.last_name = r[0]["last_name"]
         logging.info(
             f"[{self.user_id} {self.first_name} {self.last_name}]: {repr(self.message)} {repr(self.attachments)}"
         )
@@ -48,8 +49,13 @@ class EventUser:
 def send(user: EventUser, message: str, keyboard: VkKeyboard | None = None):
     if user is None:
         return
-    values = {'user_id': user.user_id, 'message': message, 'dont_parse_links': 1, 'random_id': get_random_id()}
+    values = {
+        "user_id": user.user_id,
+        "message": message,
+        "dont_parse_links": 1,
+        "random_id": get_random_id(),
+    }
     if keyboard is not None:
-        values['keyboard'] = keyboard
+        values["keyboard"] = keyboard
 
-    vk.method('messages.send', values)
+    vk.method("messages.send", values)

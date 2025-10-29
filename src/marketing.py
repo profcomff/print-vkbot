@@ -1,8 +1,9 @@
 import json
 
 import requests
+from src.settings import get_settings
 
-from src.settings import settings
+settings = get_settings()
 
 
 def pass_if_exc(func):
@@ -21,10 +22,10 @@ def register(**user_info):
     requests.post(
         settings.MARKETING_URL + "/v1/action",
         json={
-            'user_id': -2,
-            'action': 'print bot register',
-            'additional_data': json.dumps(user_info),
-            'path_from': 'https://vk.com/im',
+            "user_id": -2,
+            "action": "print bot register",
+            "additional_data": json.dumps(user_info),
+            "path_from": "https://vk.com/im",
         },
     )
 
@@ -34,10 +35,10 @@ def re_register(**user_info):
     requests.post(
         settings.MARKETING_URL + "/v1/action",
         json={
-            'user_id': -2,
-            'action': 'print bot repeat register',
-            'additional_data': json.dumps(user_info),
-            'path_from': 'https://vk.com/im',
+            "user_id": -2,
+            "action": "print bot repeat register",
+            "additional_data": json.dumps(user_info),
+            "path_from": "https://vk.com/im",
         },
     )
 
@@ -47,10 +48,10 @@ def register_exc_wrong(**user_info):
     requests.post(
         settings.MARKETING_URL + "/v1/action",
         json={
-            'user_id': -2,
-            'action': 'print bot register exc wrong creds',
-            'additional_data': json.dumps(user_info),
-            'path_from': 'https://vk.com/im',
+            "user_id": -2,
+            "action": "print bot register exc wrong creds",
+            "additional_data": json.dumps(user_info),
+            "path_from": "https://vk.com/im",
         },
     )
 
@@ -60,11 +61,11 @@ def print_success(**print_info):
     requests.post(
         settings.MARKETING_URL + "/v1/action",
         json={
-            'user_id': -2,
-            'action': 'print bot sent',
-            'additional_data': json.dumps(print_info),
-            'path_from': 'https://vk.com/im',
-            'path_to': settings.PRINT_URL + f'/file/{print_info.get("pin")}',
+            "user_id": -2,
+            "action": "print bot sent",
+            "additional_data": json.dumps(print_info),
+            "path_from": "https://vk.com/im",
+            "path_to": settings.PRINT_URL + f'/file/{print_info.get("pin")}',
         },
     )
 
@@ -74,10 +75,10 @@ def print_exc_many(**print_info):
     requests.post(
         settings.MARKETING_URL + "/v1/action",
         json={
-            'user_id': -2,
-            'action': 'print bot sent exc many',
-            'additional_data': json.dumps(print_info),
-            'path_from': 'https://vk.com/im',
+            "user_id": -2,
+            "action": "print bot sent exc many",
+            "additional_data": json.dumps(print_info),
+            "path_from": "https://vk.com/im",
         },
     )
 
@@ -87,10 +88,10 @@ def print_exc_format(**print_info):
     requests.post(
         settings.MARKETING_URL + "/v1/action",
         json={
-            'user_id': -2,
-            'action': 'print bot sent exc format',
-            'additional_data': json.dumps(print_info),
-            'path_from': 'https://vk.com/im',
+            "user_id": -2,
+            "action": "print bot sent exc format",
+            "additional_data": json.dumps(print_info),
+            "path_from": "https://vk.com/im",
         },
     )
 
@@ -100,9 +101,9 @@ def print_exc_other(**print_info):
     requests.post(
         settings.MARKETING_URL + "/v1/action",
         json={
-            'user_id': -2,
-            'action': 'print bot sent exc other',
-            'additional_data': json.dumps(print_info),
-            'path_from': 'https://vk.com/im',
+            "user_id": -2,
+            "action": "print bot sent exc other",
+            "additional_data": json.dumps(print_info),
+            "path_from": "https://vk.com/im",
         },
     )
