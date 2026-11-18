@@ -20,6 +20,7 @@ def pass_if_exc(func):
 def register(**user_info):
     requests.post(
         settings.MARKETING_URL + "/v1/action",
+        timeout=(3, 5),
         json={
             'user_id': -2,
             'action': 'print bot register',
@@ -33,6 +34,7 @@ def register(**user_info):
 def re_register(**user_info):
     requests.post(
         settings.MARKETING_URL + "/v1/action",
+        timeout=(3, 5),
         json={
             'user_id': -2,
             'action': 'print bot repeat register',
@@ -46,6 +48,7 @@ def re_register(**user_info):
 def register_exc_wrong(**user_info):
     requests.post(
         settings.MARKETING_URL + "/v1/action",
+        timeout=(3, 5),
         json={
             'user_id': -2,
             'action': 'print bot register exc wrong creds',
@@ -59,6 +62,7 @@ def register_exc_wrong(**user_info):
 def print_success(**print_info):
     requests.post(
         settings.MARKETING_URL + "/v1/action",
+        timeout=(3, 5),
         json={
             'user_id': -2,
             'action': 'print bot sent',
@@ -73,6 +77,7 @@ def print_success(**print_info):
 def print_exc_many(**print_info):
     requests.post(
         settings.MARKETING_URL + "/v1/action",
+        timeout=(3, 5),
         json={
             'user_id': -2,
             'action': 'print bot sent exc many',
@@ -86,6 +91,7 @@ def print_exc_many(**print_info):
 def print_exc_format(**print_info):
     requests.post(
         settings.MARKETING_URL + "/v1/action",
+        timeout=(3, 5),
         json={
             'user_id': -2,
             'action': 'print bot sent exc format',
@@ -99,6 +105,7 @@ def print_exc_format(**print_info):
 def print_exc_other(**print_info):
     requests.post(
         settings.MARKETING_URL + "/v1/action",
+        timeout=(3, 5),
         json={
             'user_id': -2,
             'action': 'print bot sent exc other',

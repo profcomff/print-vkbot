@@ -33,5 +33,5 @@ class VkUser(Base):
     number: Mapped[int] = mapped_column(sqlalchemy.String, nullable=False)
 
 
-engine = create_engine(url=str(settings.DB_DSN), pool_pre_ping=True, isolation_level="AUTOCOMMIT")
+engine = create_engine(url=settings.db_url, pool_pre_ping=True, isolation_level="AUTOCOMMIT")
 Session = sessionmaker(bind=engine)

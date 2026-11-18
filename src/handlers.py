@@ -4,7 +4,6 @@
 import json
 import logging
 import time
-import traceback
 
 import psycopg2
 import requests
@@ -21,42 +20,53 @@ from src.settings import settings
 
 
 def event_loop():
+    longpoll = None
+    while True:
+        try:
+            if longpoll is None:
+                longpoll = vk.create_longpoll()
+            events = longpoll.check()
+        except (OSError, VkApiError, requests.RequestException, ValueError, KeyError) as err:
+            logging.warning('VK Long Poll failed (%s). Retrying in 5 seconds.', type(err).__name__)
+            time.sleep(5)
+            continue
+
+        for event in events:
+            if event.type in (VkBotEventType.MESSAGE_NEW, VkBotEventType.MESSAGE_ALLOW):
+                handle_event(event)
+
+
+def handle_event(event):
     user = None
     try:
-        vk.reconnect()
-        for event in vk.longpoll.listen():
-            if event.type not in [VkBotEventType.MESSAGE_NEW, VkBotEventType.MESSAGE_ALLOW]:
-                if event.type != VkBotEventType.MESSAGE_REPLY:
-                    logging.warning('UNKNOWN EVENT TYPE:' + str(event.type))
-                return
+        user = vk.EventUser(event)
+        if event.type == VkBotEventType.MESSAGE_ALLOW:
+            kb.main_page(user)
+        elif event.message.payload is not None:
+            kb.keyboard_browser(user, event.message.payload)
+        else:
+            message_analyzer(user)
+        return
+    except VkApiError as err:
+        logging.warning('VK API call failed (%s)', type(err).__name__)
+        message = ans.err_vk
+    except requests.RequestException as err:
+        logging.warning('HTTP request while handling VK event failed (%s)', type(err).__name__)
+        message = ans.err_print
+    except (SQLAlchemyError, psycopg2.Error):
+        logging.exception('VK user database operation failed')
+        message = ans.err_bd
+    except json.JSONDecodeError:
+        logging.warning('Invalid VK keyboard payload')
+        message = ans.err_kb
+    except Exception:
+        logging.exception('VK event handling failed')
+        message = ans.err_fatal
 
-            user = vk.EventUser(event)
-            if event.type == VkBotEventType.MESSAGE_ALLOW:
-                kb.main_page(user)
-                return
-
-            if event.message.payload is not None:
-                kb.keyboard_browser(user, event.message.payload)
-            else:
-                message_analyzer(user)
+    try:
+        vk.send(user, message, keyboard=kb.links_keyboard())
     except (OSError, VkApiError, requests.RequestException) as err:
-        time.sleep(5)
-        vk.reconnect()
-        vk.send(user, ans.err_vk, keyboard=kb.links_keyboard())
-        logging.error(err)
-        traceback.print_tb(err.__traceback__)
-    except (SQLAlchemyError, psycopg2.Error) as err:
-        vk.send(user, ans.err_bd, keyboard=kb.links_keyboard())
-        logging.error(err)
-        traceback.print_tb(err.__traceback__)
-    except json.decoder.JSONDecodeError as err:
-        vk.send(user, ans.err_kb, keyboard=kb.links_keyboard())
-        logging.error(err)
-        traceback.print_tb(err.__traceback__)
-    except Exception as err:
-        vk.send(user, ans.err_fatal, keyboard=kb.links_keyboard())
-        logging.error(err)
-        traceback.print_tb(err.__traceback__)
+        logging.warning('Could not send the VK error reply (%s)', type(err).__name__)
 
 
 def message_analyzer(user: vk.EventUser):
@@ -134,7 +144,8 @@ def get_attachments(user: vk.EventUser):
 
     title = user.attachments[0]['doc']['title']
     url = user.attachments[0]['doc']['url']
-    r = requests.get(url, allow_redirects=True)
+    r = requests.get(url, timeout=(5, 30))
+    r.raise_for_status()
     return r.content, title
 
 
@@ -148,7 +159,9 @@ def order_print(user: vk.EventUser, db_requisites):
     content, title = file_content_title
     vk_id, surname, number = db_requisites
     r = requests.post(
-        settings.PRINT_URL + '/file', json={'surname': surname, 'number': number, 'filename': title, 'source': 'vkbot'}
+        settings.PRINT_URL + '/file',
+        json={'surname': surname, 'number': number, 'filename': title, 'source': 'vkbot'},
+        timeout=(5, 30),
     )
 
     # If get pin error
@@ -162,7 +175,7 @@ def order_print(user: vk.EventUser, db_requisites):
     # Upload file with pin
     pin = r.json()['pin']
     files = {'file': (title, content, 'application/pdf', {'Expires': '0'})}
-    r = requests.post(settings.PRINT_URL + '/file/' + pin, files=files)
+    r = requests.post(settings.PRINT_URL + '/file/' + pin, files=files, timeout=(5, 30))
 
     # Send response
     if r.status_code == 200:
@@ -176,7 +189,7 @@ def order_print(user: vk.EventUser, db_requisites):
             number=number,
             pin=pin,
             status_code=r.status_code,
-            description='File is too big',
+            description='File exceeds size or page limit',
         )
     elif r.status_code == 415:
         vk.send(user, ans.warn_unreadable_file)
